@@ -1,2 +1,5 @@
-// TODO
-// Add code to SPL-js-Engine
+import { createEngine } from "./src/derivationEngine";
+
+const engine = await createEngine();
+
+export default engine;
