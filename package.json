@@ -1,6 +1,6 @@
 {
   "name": "create-spl-app",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "keywords": [
     "spl"
   ],
@@ -9,10 +9,6 @@
   "engines": {
     "node": ">=14"
   },
-  "files": [
-    "index.js",
-    "createSplApp.js"
-  ],
   "bin": {
     "create-spl-app": "./index.js"
   },

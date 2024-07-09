@@ -160,9 +160,10 @@ features
         uvlTemplate
     );
 
-    // copy the template files
+    // copy the template files to the root that are in /templates/base
     // TODO: user can specify the template
-    const templatePath = path.join(__dirname, 'templates/base');
+
+    const templatePath = path.join(__dirname, 'templates', 'base');
     fs.copySync(templatePath, root);
 
     const originalDirectory = process.cwd();
