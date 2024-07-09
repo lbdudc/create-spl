@@ -1,0 +1,10 @@
+imports
+	usermanagement_component
+	webapplication_component
+	mapviewer_component	
+features
+	MainSPL
+		mandatory
+			usermanagement_component.UserManagement
+			webapplication_component.WebApplication
+			mapviewer_component.MapViewer
