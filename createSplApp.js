@@ -343,7 +343,7 @@ features
             break
         default:
             console.log(`  ${pkgManager} install`)
-            console.log(`  ${pkgManager} run generate <product-route>`)
+            console.log(`  npx ${pkg.name} generate <product-route>`)
             break
     }
     console.log()

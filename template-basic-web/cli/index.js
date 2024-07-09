@@ -61,6 +61,14 @@ async function runCommand(cmd, flags) {
             await add(packages, { flags });
             return;
         }
+        case "generate": {
+            const { createEngine, readJsonFromFile } = await import("./generate/index.js");
+            const engine = await createEngine();
+
+            engine.generateProduct("output", readJsonFromFile("spec.json"));
+
+            return;
+        }
     }
     throw new Error(`Error running ${cmd} -- no command found.`);
 }
