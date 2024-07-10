@@ -8,24 +8,18 @@
 
 The **Create SPL App** is a versatile comand line designed to simplify the process of creating a new SPL application. This library provides a flexible strategy to facilitate the creation of a new SPL application with a predefined structure.
 
-## Installation
+## Usage
 
-Install the package via npm:
+Execute the following command via npm:
 
 ```bash
-npm install create-spl-app
+npm create spl
 ```
 
 ## Pre-requisites
 
 - Have installed in your machine:
   - [Node.js](https://nodejs.org/en/download/)
-
-## Example Usages
-
-```bash
-npm create spl-app mynewapp
-```
 
 ## Author
 
