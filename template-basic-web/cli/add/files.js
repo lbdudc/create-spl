@@ -1,7 +1,7 @@
 import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
 import { readFileSync, writeFileSync, readdirSync } from "fs";
 import { execSync } from "child_process";
-import path from "path";
+import path, { sep } from "path";
 
 /**
  * Function that adds dependency to the project
@@ -14,7 +14,7 @@ async function addDependency(names) {
 
     // add the packages to the package.json file
     try {
-        const pckg = readFileSync(process.cwd() + "/package.json", "utf-8");
+        const pckg = readFileSync(process.cwd() + sep + "package.json", "utf-8");
         const json = JSON.parse(pckg);
 
         names.forEach((name) => {
@@ -35,18 +35,17 @@ async function addDependency(names) {
                 return;
             }
 
-            // if its a normal npm package, check if it has a version
-            // if not, add the latest version
-            if (!name.includes("@")) {
-                json.dependencies[name] = "latest";
+            // if it has a version, add it to the package.json file
+            if (name.includes(":")) {
+                json.dependencies[name.split(":")[0]] = name.split(":")[1];
                 return;
             }
 
-            // if it has a version, add it to the package.json file
-            json.dependencies[name.split("@")[0]] = name.split("@")[1];
+            // if it has no version, add it to the package.json file
+            json.dependencies[name] = "*";
         });
 
-        writeFileSync(process.cwd() + "/package.json", JSON.stringify(json, null, 2));
+        writeFileSync(process.cwd() + sep + "package.json", JSON.stringify(json, null, 2));
     } catch (e) {
         console.log(`Error adding packages to package.json file: ${e.message}`);
         return;
@@ -68,14 +67,14 @@ async function rollBackAddDependency(names) {
 
     console.log(`\n${bold('Rolling back adding packages:')} ${green(names)}`);
     try {
-        const pckg = readFileSync(process.cwd() + "/package.json", "utf-8");
+        const pckg = readFileSync(process.cwd() + sep + "package.json", "utf-8");
         const json = JSON.parse(pckg);
 
         names.forEach((name) => {
             delete json.dependencies[name];
         });
 
-        writeFileSync(process.cwd() + "/package.json", JSON.stringify(json, null, 2));
+        writeFileSync(process.cwd() + sep + "package.json", JSON.stringify(json, null, 2));
     } catch (e) {
         console.log(`Error removing packages from package.json file: ${e.message}`);
         return;
@@ -100,12 +99,21 @@ async function checkSPLPackage(names, { flags }) {
     let validPackages = [];
 
     names.forEach((name) => {
-        let files = ["package.json", "config.json", "extra.js", "model.uvl", "transformation.js"];
+        let files = ["config.json", "extra.js", "transformation.js"];
         if (name.startsWith("file:") || name.startsWith("git+")) {
             name = name.split("/").pop();
         }
 
-        readdirSync(process.cwd() + `/node_modules/${name}`).forEach((file) => {
+        if (name.includes(":")) {
+            name = name.split(":")[0];
+        }
+
+        console.log(`\n${cyan("Checking")} ${bold(name)} ${dim("package")}`);
+        console.log(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`);
+
+
+        readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`).forEach((file) => {
+            console.log(`  ${magenta("Found")} ${bold(file)}`);
             // if the file is in the files array, remove it from the array
             if (files.includes(file)) {
                 files = files.filter((f) => f !== file);
@@ -114,7 +122,7 @@ async function checkSPLPackage(names, { flags }) {
 
         // check if there is a folder named "code"
         try {
-            readdirSync(process.cwd() + `/node_modules/${name}/code`);
+            readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform${sep}code`);
         } catch (e) {
             console.log(`\n${red('Missing code folder in')} ${bold(name)}`);
             validPackages[name] = false;
@@ -142,7 +150,7 @@ async function changeUvlFile(names, { flags }) {
 
     let projectName = null;
 
-    const pckg = readFileSync(process.cwd() + "/package.json", "utf-8");
+    const pckg = readFileSync(process.cwd() + sep + "package.json", "utf-8");
     projectName = JSON.parse(pckg).name;
 
     if (projectName == null) {
@@ -151,7 +159,7 @@ async function changeUvlFile(names, { flags }) {
     }
 
     let uvl = null;
-    uvl = readFileSync(process.cwd() + "/base.uvl", "utf-8");
+    uvl = readFileSync(process.cwd() + sep + "base.uvl", "utf-8");
 
     if (uvl == null) {
         console.log("Error reading base.uvl file");
@@ -179,7 +187,7 @@ async function changeUvlFile(names, { flags }) {
 
 
     try {
-        writeFileSync(process.cwd() + "/base.uvl", newUvl);
+        writeFileSync(process.cwd() + sep + "base.uvl", newUvl);
     } catch (e) {
         console.log("Error writing to base.uvl file");
         return;

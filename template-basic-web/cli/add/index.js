@@ -24,8 +24,8 @@ async function add(names, { flags }) {
     }
 
     // Change the UVL file
-    console.log(`\n${bold('Changing')} ${green('base.uvl')} ${bold('file ...')}`);
-    await changeUvlFile(packages.filter((p) => !p.valid).map((p) => p.name), { flags });
+    console.log(`\n${bold('Changing')} ${green('base.uvl')} ${bold('file, adding ')}[${(magenta(names.join(', ')))}]'`);
+    await changeUvlFile(packages.filter((p) => p.valid).map((p) => p.name), { flags });
 
     // // change the spl-js-engine file to include the new package
     // // await changeSplJsEngine(names, { flags });
