@@ -1,1004 +1,437 @@
-'use strict';
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import spawn from 'cross-spawn'
+import minimist from 'minimist'
+import prompts from 'prompts'
+import {
+    cyan,
+    green,
+    magenta,
+    red,
+    reset,
+    yellow,
+} from 'kolorist'
 
-const https = require('https');
-const chalk = require('chalk');
-const commander = require('commander');
-const dns = require('dns');
-const envinfo = require('envinfo');
-const execSync = require('child_process').execSync;
-const fs = require('fs-extra');
-const hyperquest = require('hyperquest');
-const prompts = require('prompts');
-const os = require('os');
-const path = require('path');
-const semver = require('semver');
-const spawn = require('cross-spawn');
-const tmp = require('tmp');
-const unpack = require('tar-pack').unpack;
-const url = require('url');
-const validateProjectName = require('validate-npm-package-name');
+const argv = minimist(process.argv.slice(2), {
+    default: { help: false },
+    alias: { h: "help", t: "template" },
+    string: ["_"]
+})
+const cwd = process.cwd()
 
 
-const packageJson = require('./package.json');
+// prettier-ignore
+const helpMessage = `\
+Usage: create-spl-app [OPTION]... [DIRECTORY]
 
-let projectName;
+Create a new SPL app project in JavaScript
+With no arguments, start the CLI in interactive mode.
 
-function init() {
-    const program = new commander.Command(packageJson.name)
-        .version(packageJson.version)
-        .arguments('<project-directory>')
-        .usage(`${chalk.green('<project-directory>')} [options]`)
-        .action(name => {
-            projectName = name;
-        })
-        .option('--verbose', 'print additional logs')
-        .option('--info', 'print environment debug info')
-        .option('--use-pnpm')
-        .allowUnknownOption()
-        .on('--help', () => {
-            console.log(
-                `    Only ${chalk.green('<project-directory>')} is required.`
-            );
-            console.log();
-            console.log(
-                `    If you have any problems, do not hesitate to file an issue:`
-            );
-            console.log(
-                `      ${chalk.cyan(
-                    'https://github.com/lbdudc/create-spl-app/issues/new'
-                )}`
-            );
-            console.log();
-        })
-        .parse(process.argv);
+Options:
+  -t, --template NAME        use a specific template
 
-    if (program.info) {
-        console.log(chalk.bold('\nEnvironment Info:'));
-        console.log(
-            `\n  current version of ${packageJson.name}: ${packageJson.version}`
-        );
-        console.log(`  running from ${__dirname}`);
-        return envinfo
-            .run(
-                {
-                    System: ['OS', 'CPU'],
-                    Binaries: ['Node', 'npm', 'Yarn'],
-                    Browsers: [
-                        'Chrome',
-                        'Edge',
-                        'Internet Explorer',
-                        'Firefox',
-                        'Safari',
-                    ],
-                    npmPackages: ['spl-js-engine', 'kleur', 'yargs-parser'],
-                    npmGlobalPackages: ['create-spl-app'],
-                },
-                {
-                    duplicates: true,
-                    showNotFound: true,
-                }
-            )
-            .then(console.log);
-    }
+Available templates:
+${yellow('basic-web')}
+${green('basic-web-with-mapviewer')}
+${cyan('basic-backend')}
+${magenta('basic-web-traffic-analyzer')}`
 
-    if (typeof projectName === 'undefined') {
-        console.error('Please specify the project directory:');
-        console.log(
-            `  ${chalk.cyan(program.name())} ${chalk.green('<project-directory>')}`
-        );
-        console.log();
-        console.log('For example:');
-        console.log(
-            `  ${chalk.cyan(program.name())} ${chalk.green('my-spl-app')}`
-        );
-        console.log();
-        console.log(
-            `Run ${chalk.cyan(`${program.name()} --help`)} to see all options.`
-        );
-        process.exit(1);
-    }
+const FRAMEWORKS = [
+    {
+        name: 'spljsengine',
+        display: 'spl-js-engine',
+        color: yellow,
+        variants: [
+            {
+                name: 'basic-web',
+                display: 'basic-web ↗',
+                color: yellow,
+            },
+            {
+                name: 'basic-web-with-mapviewer',
+                display: 'basic-web-with-mapviewer ↗',
+                color: green,
+            },
+            {
+                name: 'basic-backend',
+                display: 'basic-backend ↗',
+                color: cyan,
+            },
+            {
+                name: 'basic-web-traffic-analyzer',
+                display: 'basic-web-traffic-analyzer ↗',
+                color: magenta,
+            },
+        ],
+    },
+    {
+        name: 'others',
+        display: 'Others',
+        color: reset,
+        variants: [
+            {
+                name: 'create-other-spl',
+                display: 'create-other-extra ↗',
+                color: reset,
+                customCommand: '',
+            },
+            {
+                name: 'create-other-spl-more',
+                display: 'create-other-spl-more ↗',
+                color: reset,
+                customCommand: '',
+            },
+        ],
+    },
+];
 
-    createApp(projectName, program.verbose, program.template, program.usePnpm);
+
+const TEMPLATES = FRAMEWORKS.map(
+    f => (f.variants && f.variants.map(v => v.name)) || [f.name]
+).reduce((a, b) => a.concat(b), [])
+
+const renameFiles = {
+    _gitignore: ".gitignore"
 }
 
+const defaultTargetDir = "spl-project"
 
+async function init() {
+    const argTargetDir = formatTargetDir(argv._[0])
+    const argTemplate = argv.template || argv.t
 
-function createApp(name, verbose, version, template, useYarn, usePnp) {
-    const unsupportedNodeVersion = !semver.satisfies(
-        // Coerce strings with metadata (i.e. `15.0.0-nightly`).
-        semver.coerce(process.version),
-        '>=14'
-    );
-
-    if (unsupportedNodeVersion) {
-        console.log(
-            chalk.yellow(
-                `You are using Node ${process.version} so the project will be bootstrapped with an old unsupported version of tools.\n\n` +
-                `Please update to Node 14 or higher for a better, fully supported experience.\n`
-            )
-        );
+    const help = argv.help
+    if (help) {
+        console.log(helpMessage)
+        return
     }
 
-    const root = path.resolve(name);
-    const appName = path.basename(root);
+    let targetDir = argTargetDir || defaultTargetDir
+    const getProjectName = () =>
+        targetDir === "." ? path.basename(path.resolve()) : targetDir
 
-    checkAppName(appName);
-    fs.ensureDirSync(name);
-    if (!isSafeToCreateProjectIn(root, name)) {
-        process.exit(1);
+    let result
+
+    prompts.override({
+        overwrite: argv.overwrite
+    })
+
+    try {
+        result = await prompts(
+            [
+                {
+                    type: argTargetDir ? null : "text",
+                    name: "projectName",
+                    message: reset("Project name:"),
+                    initial: defaultTargetDir,
+                    onState: state => {
+                        targetDir = formatTargetDir(state.value) || defaultTargetDir
+                    }
+                },
+                {
+                    type: () =>
+                        !fs.existsSync(targetDir) || isEmpty(targetDir) ? null : "select",
+                    name: "overwrite",
+                    message: () =>
+                        (targetDir === "."
+                            ? "Current directory"
+                            : `Target directory "${targetDir}"`) +
+                        ` is not empty. Please choose how to proceed:`,
+                    initial: 0,
+                    choices: [
+                        {
+                            title: "Remove existing files and continue",
+                            value: "yes"
+                        },
+                        {
+                            title: "Cancel operation",
+                            value: "no"
+                        },
+                        {
+                            title: "Ignore files and continue",
+                            value: "ignore"
+                        }
+                    ]
+                },
+                {
+                    type: (_, { overwrite }) => {
+                        if (overwrite === "no") {
+                            throw new Error(red("✖") + " Operation cancelled")
+                        }
+                        return null
+                    },
+                    name: "overwriteChecker"
+                },
+                {
+                    type: () => (isValidPackageName(getProjectName()) ? null : "text"),
+                    name: "packageName",
+                    message: reset("Package name:"),
+                    initial: () => toValidPackageName(getProjectName()),
+                    validate: dir =>
+                        isValidPackageName(dir) || "Invalid package.json name"
+                },
+                {
+                    type:
+                        argTemplate && TEMPLATES.includes(argTemplate) ? null : "select",
+                    name: "framework",
+                    message:
+                        typeof argTemplate === "string" && !TEMPLATES.includes(argTemplate)
+                            ? reset(
+                                `"${argTemplate}" isn't a valid template. Please choose from below: `
+                            )
+                            : reset("Select a derivation engine:"),
+                    initial: 0,
+                    choices: FRAMEWORKS.map(framework => {
+                        const frameworkColor = framework.color
+                        return {
+                            title: frameworkColor(framework.display || framework.name),
+                            value: framework
+                        }
+                    })
+                },
+                {
+                    type: framework =>
+                        framework && framework.variants ? "select" : null,
+                    name: "variant",
+                    message: reset("Select a derivation engine:"),
+                    choices: framework =>
+                        framework.variants.map(variant => {
+                            const variantColor = variant.color
+                            return {
+                                title: variantColor(variant.display || variant.name),
+                                value: variant.name
+                            }
+                        })
+                }
+            ],
+            {
+                onCancel: () => {
+                    throw new Error(red("✖") + " Operation cancelled")
+                }
+            }
+        )
+    } catch (cancelled) {
+        console.log(cancelled.message)
+        return
     }
-    console.log();
 
-    console.log(`Creating a new SPL app in ${chalk.green(root)}.`);
-    console.log();
+    // user choice associated with prompts
+    const { framework, overwrite, packageName, variant } = result
 
-    const packageJson = {
-        name: appName,
-        version: '0.1.0',
-        private: true,
-        type: "module",
-        bin: {},
-    };
+    const root = path.join(cwd, targetDir)
 
-    packageJson.bin[appName] = 'cli/index.js';
+    if (overwrite === "yes") {
+        emptyDir(root)
+    } else if (!fs.existsSync(root)) {
+        fs.mkdirSync(root, { recursive: true })
+    }
+
+    // determine template
+    let template = variant || framework?.name || argTemplate
+    let isReactSwc = false
+    if (template.includes("-swc")) {
+        isReactSwc = true
+        template = template.replace("-swc", "")
+    }
+
+    const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
+    const pkgManager = pkgInfo ? pkgInfo.name : "npm"
+    const isYarn1 = pkgManager === "yarn" && pkgInfo?.version.startsWith("1.")
+        ;
+
+    const { customCommand } =
+        FRAMEWORKS.flatMap(f => f.variants).find(v => v.name === template) ?? {}
+
+    if (customCommand) {
+        const fullCustomCommand = customCommand
+            .replace(/^npm create /, () => {
+                // `bun create` uses it's own set of templates,
+                // the closest alternative is using `bun x` directly on the package
+                if (pkgManager === "bun") {
+                    return "bun x create-"
+                }
+                return `${pkgManager} create `
+            })
+            // Only Yarn 1.x doesn't support `@version` in the `create` command
+            .replace("@latest", () => (isYarn1 ? "" : "@latest"))
+            .replace(/^npm exec/, () => {
+                // Prefer `pnpm dlx`, `yarn dlx`, or `bun x`
+                if (pkgManager === "pnpm") {
+                    return "pnpm dlx"
+                }
+                if (pkgManager === "yarn" && !isYarn1) {
+                    return "yarn dlx"
+                }
+                if (pkgManager === "bun") {
+                    return "bun x"
+                }
+                // Use `npm exec` in all other cases,
+                // including Yarn 1.x and other custom npm clients.
+                return "npm exec"
+            })
+
+        const [command, ...args] = fullCustomCommand.split(" ")
+        // we replace TARGET_DIR here because targetDir may include a space
+        const replacedArgs = args.map(arg =>
+            arg.replace("TARGET_DIR", () => targetDir)
+        )
+        const { status } = spawn.sync(command, replacedArgs, {
+            stdio: "inherit"
+        })
+        process.exit(status ?? 0)
+    }
+
+    console.log(`\nScaffolding project in ${root}...`)
+
+    const templateDir = path.resolve(
+        fileURLToPath(import.meta.url),
+        "..",
+        `template-${template}`
+    )
+
+    const write = (file, content) => {
+        const targetPath = path.join(root, renameFiles[file] ?? file)
+        if (content) {
+            fs.writeFileSync(targetPath, content)
+        } else {
+            copy(path.join(templateDir, file), targetPath)
+        }
+    }
+
+    const files = fs.readdirSync(templateDir)
+    for (const file of files.filter(f => f !== "package.json")) {
+        write(file)
+    }
+
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(templateDir, `package.json`), "utf-8")
+    )
+
+    pkg.name = packageName || getProjectName()
+    pkg.bin[pkg.name] = 'cli/index.js';
+
+    write("package.json", JSON.stringify(pkg, null, 2) + "\n")
 
     const uvlTemplate = `
 imports
     base_component
 features
-    ${appName}
+    ${pkg.name}
         mandatory
             base_component.WebApplication`;
 
-    fs.writeFileSync(
-        path.join(root, 'package.json'),
-        JSON.stringify(packageJson, null, 2) + os.EOL
-    );
+    write("base.uvl", uvlTemplate)
 
-    fs.writeFileSync(
-        path.join(root, 'base.uvl'),
-        uvlTemplate
-    );
 
-    // copy the template files to the root that are in /templates/base
-    // TODO: user can specify the template
-
-    const templatePath = path.join(__dirname, 'templates', 'base');
-    fs.copySync(templatePath, root);
-
-    const originalDirectory = process.cwd();
-    process.chdir(root);
-    if (!useYarn && !checkThatNpmCanReadCwd()) {
-        process.exit(1);
+    if (isReactSwc) {
+        setupReactSwc(root, template.endsWith("-ts"))
     }
 
-    if (!useYarn) {
-        const npmInfo = checkNpmVersion();
-        if (!npmInfo.hasMinNpm) {
-            if (npmInfo.npmVersion) {
-                console.log(
-                    chalk.yellow(
-                        `You are using npm ${npmInfo.npmVersion} so the project will be bootstrapped with an old unsupported version of tools.\n\n` +
-                        `Please update to npm 6 or higher for a better, fully supported experience.\n`
-                    )
-                );
-            }
-            // Fall back to latest supported react-scripts for npm 3
-            version = 'react-scripts@0.9.x';
-        }
-    } else if (usePnp) {
-        const yarnInfo = checkYarnVersion();
-        if (yarnInfo.yarnVersion) {
-            if (!yarnInfo.hasMinYarnPnp) {
-                console.log(
-                    chalk.yellow(
-                        `You are using Yarn ${yarnInfo.yarnVersion} together with the --use-pnp flag, but Plug'n'Play is only supported starting from the 1.12 release.\n\n` +
-                        `Please update to Yarn 1.12 or higher for a better, fully supported experience.\n`
-                    )
-                );
-                // 1.11 had an issue with webpack-dev-middleware, so better not use PnP with it (never reached stable, but still)
-                usePnp = false;
-            }
-            if (!yarnInfo.hasMaxYarnPnp) {
-                console.log(
-                    chalk.yellow(
-                        'The --use-pnp flag is no longer necessary with yarn 2 and will be deprecated and removed in a future release.\n'
-                    )
-                );
-                // 2 supports PnP by default and breaks when trying to use the flag
-                usePnp = false;
-            }
-        }
-    }
-
-    run(
-        root,
-        appName,
-        version,
-        verbose,
-        originalDirectory,
-        template,
-        useYarn,
-        usePnp
-    );
-}
-
-
-
-function setCaretRangeForRuntimeDeps(packageName) {
-    const packagePath = path.join(process.cwd(), 'package.json');
-    const packageJson = require(packagePath);
-
-    if (typeof packageJson.dependencies === 'undefined') {
-        console.error(chalk.red('Missing dependencies in package.json'));
-        process.exit(1);
-    }
-
-    const packageVersion = packageJson.dependencies[packageName];
-    if (typeof packageVersion === 'undefined') {
-        console.error(chalk.red(`Unable to find ${packageName} in package.json`));
-        process.exit(1);
-    }
-
-    makeCaretRange(packageJson.dependencies, 'react');
-    makeCaretRange(packageJson.dependencies, 'react-dom');
-
-    fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + os.EOL);
-}
-
-// If project only contains files generated by GH, it’s safe.
-// Also, if project contains remnant error logs from a previous
-// installation, lets remove them now.
-// We also special case IJ-based products .idea because it integrates with CRA:
-// https://github.com/facebook/create-react-app/pull/368#issuecomment-243446094
-function isSafeToCreateProjectIn(root, name) {
-    const validFiles = [
-        '.DS_Store',
-        '.git',
-        '.gitattributes',
-        '.gitignore',
-        '.gitlab-ci.yml',
-        '.hg',
-        '.hgcheck',
-        '.hgignore',
-        '.idea',
-        '.npmignore',
-        '.travis.yml',
-        'docs',
-        'LICENSE',
-        'README.md',
-        'mkdocs.yml',
-        'Thumbs.db',
-    ];
-    // These files should be allowed to remain on a failed install, but then
-    // silently removed during the next create.
-    const errorLogFilePatterns = [
-        'npm-debug.log',
-        'yarn-error.log',
-        'yarn-debug.log',
-    ];
-    const isErrorLog = file => {
-        return errorLogFilePatterns.some(pattern => file.startsWith(pattern));
-    };
-
-    const conflicts = fs
-        .readdirSync(root)
-        .filter(file => !validFiles.includes(file))
-        // IntelliJ IDEA creates module files before CRA is launched
-        .filter(file => !/\.iml$/.test(file))
-        // Don't treat log files from previous installation as conflicts
-        .filter(file => !isErrorLog(file));
-
-    if (conflicts.length > 0) {
+    const cdProjectName = path.relative(cwd, root)
+    console.log(`\nDone. Now run:\n`)
+    if (root !== cwd) {
         console.log(
-            `The directory ${chalk.green(name)} contains files that could conflict:`
-        );
-        console.log();
-        for (const file of conflicts) {
-            try {
-                const stats = fs.lstatSync(path.join(root, file));
-                if (stats.isDirectory()) {
-                    console.log(`  ${chalk.blue(`${file}/`)}`);
-                } else {
-                    console.log(`  ${file}`);
-                }
-            } catch (e) {
-                console.log(`  ${file}`);
-            }
-        }
-        console.log();
-        console.log(
-            'Either try using a new directory name, or remove the files listed above.'
-        );
-
-        return false;
-    }
-
-    // Remove any log files from a previous installation.
-    fs.readdirSync(root).forEach(file => {
-        if (isErrorLog(file)) {
-            fs.removeSync(path.join(root, file));
-        }
-    });
-    return true;
-}
-
-function getProxy() {
-    if (process.env.https_proxy) {
-        return process.env.https_proxy;
-    } else {
-        try {
-            // Trying to read https-proxy from .npmrc
-            let httpsProxy = execSync('npm config get https-proxy').toString().trim();
-            return httpsProxy !== 'null' ? httpsProxy : undefined;
-        } catch (e) {
-            return;
-        }
-    }
-}
-
-
-// See https://github.com/facebook/create-react-app/pull/3355
-function checkThatNpmCanReadCwd() {
-    const cwd = process.cwd();
-    let childOutput = null;
-    try {
-        // Note: intentionally using spawn over exec since
-        // the problem doesn't reproduce otherwise.
-        // `npm config list` is the only reliable way I could find
-        // to reproduce the wrong path. Just printing process.cwd()
-        // in a Node process was not enough.
-        childOutput = spawn.sync('npm', ['config', 'list']).output.join('');
-    } catch (err) {
-        // Something went wrong spawning node.
-        // Not great, but it means we can't do this check.
-        // We might fail later on, but let's continue.
-        return true;
-    }
-    if (typeof childOutput !== 'string') {
-        return true;
-    }
-    const lines = childOutput.split('\n');
-    // `npm config list` output includes the following line:
-    // "; cwd = C:\path\to\current\dir" (unquoted)
-    // I couldn't find an easier way to get it.
-    const prefix = '; cwd = ';
-    const line = lines.find(line => line.startsWith(prefix));
-    if (typeof line !== 'string') {
-        // Fail gracefully. They could remove it.
-        return true;
-    }
-    const npmCWD = line.substring(prefix.length);
-    if (npmCWD === cwd) {
-        return true;
-    }
-    console.error(
-        chalk.red(
-            `Could not start an npm process in the right directory.\n\n` +
-            `The current directory is: ${chalk.bold(cwd)}\n` +
-            `However, a newly started npm process runs in: ${chalk.bold(
-                npmCWD
-            )}\n\n` +
-            `This is probably caused by a misconfigured system terminal shell.`
+            `  cd ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName
+            }`
         )
-    );
-    if (process.platform === 'win32') {
-        console.error(
-            chalk.red(`On Windows, this can usually be fixed by running:\n\n`) +
-            `  ${chalk.cyan(
-                'reg'
-            )} delete "HKCU\\Software\\Microsoft\\Command Processor" /v AutoRun /f\n` +
-            `  ${chalk.cyan(
-                'reg'
-            )} delete "HKLM\\Software\\Microsoft\\Command Processor" /v AutoRun /f\n\n` +
-            chalk.red(`Try to run the above two lines in the terminal.\n`) +
-            chalk.red(
-                `To learn more about this problem, read: https://blogs.msdn.microsoft.com/oldnewthing/20071121-00/?p=24433/`
-            )
-        );
     }
-    return false;
+    switch (pkgManager) {
+        case "yarn":
+            console.log("  yarn")
+            console.log("  yarn generate <product-route>")
+            break
+        default:
+            console.log(`  ${pkgManager} install`)
+            console.log(`  npx ${pkg.name} generate <product-route>`)
+            break
+    }
+    console.log()
 }
 
 
-function checkYarnVersion() {
-    const minYarnPnp = '1.12.0';
-    const maxYarnPnp = '2.0.0';
-    let hasMinYarnPnp = false;
-    let hasMaxYarnPnp = false;
-    let yarnVersion = null;
-    try {
-        yarnVersion = execSync('yarnpkg --version').toString().trim();
-        if (semver.valid(yarnVersion)) {
-            hasMinYarnPnp = semver.gte(yarnVersion, minYarnPnp);
-            hasMaxYarnPnp = semver.lt(yarnVersion, maxYarnPnp);
-        } else {
-            // Handle non-semver compliant yarn version strings, which yarn currently
-            // uses for nightly builds. The regex truncates anything after the first
-            // dash. See #5362.
-            const trimmedYarnVersionMatch = /^(.+?)[-+].+$/.exec(yarnVersion);
-            if (trimmedYarnVersionMatch) {
-                const trimmedYarnVersion = trimmedYarnVersionMatch.pop();
-                hasMinYarnPnp = semver.gte(trimmedYarnVersion, minYarnPnp);
-                hasMaxYarnPnp = semver.lt(trimmedYarnVersion, maxYarnPnp);
-            }
-        }
-    } catch (err) {
-        // ignore
+function formatTargetDir(targetDir) {
+    return targetDir?.trim().replace(/\/+$/g, "")
+}
+
+function copy(src, dest) {
+    const stat = fs.statSync(src)
+    if (stat.isDirectory()) {
+        copyDir(src, dest)
+    } else {
+        fs.copyFileSync(src, dest)
     }
+}
+
+function isValidPackageName(projectName) {
+    return /^(?:@[a-z\d\-*~][a-z\d\-*._~]*\/)?[a-z\d\-~][a-z\d\-._~]*$/.test(
+        projectName
+    )
+}
+
+function toValidPackageName(projectName) {
+    return projectName
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/^[._]/, "")
+        .replace(/[^a-z\d\-~]+/g, "-")
+}
+
+function copyDir(srcDir, destDir) {
+    fs.mkdirSync(destDir, { recursive: true })
+    for (const file of fs.readdirSync(srcDir)) {
+        const srcFile = path.resolve(srcDir, file)
+        const destFile = path.resolve(destDir, file)
+        copy(srcFile, destFile)
+    }
+}
+
+function isEmpty(path) {
+    const files = fs.readdirSync(path)
+    return files.length === 0 || (files.length === 1 && files[0] === ".git")
+}
+
+function emptyDir(dir) {
+    if (!fs.existsSync(dir)) {
+        return
+    }
+    for (const file of fs.readdirSync(dir)) {
+        if (file === ".git") {
+            continue
+        }
+        fs.rmSync(path.resolve(dir, file), { recursive: true, force: true })
+    }
+}
+
+function pkgFromUserAgent(userAgent) {
+    if (!userAgent) return undefined
+    const pkgSpec = userAgent.split(" ")[0]
+    const pkgSpecArr = pkgSpec.split("/")
     return {
-        hasMinYarnPnp: hasMinYarnPnp,
-        hasMaxYarnPnp: hasMaxYarnPnp,
-        yarnVersion: yarnVersion,
-    };
-}
-
-function checkNodeVersion(packageName) {
-    const packageJsonPath = path.resolve(
-        process.cwd(),
-        'node_modules',
-        packageName,
-        'package.json'
-    );
-
-    if (!fs.existsSync(packageJsonPath)) {
-        return;
-    }
-
-    const packageJson = require(packageJsonPath);
-    if (!packageJson.engines || !packageJson.engines.node) {
-        return;
-    }
-
-    if (!semver.satisfies(process.version, packageJson.engines.node)) {
-        console.error(
-            chalk.red(
-                'You are running Node %s.\n' +
-                'Create React App requires Node %s or higher. \n' +
-                'Please update your version of Node.'
-            ),
-            process.version,
-            packageJson.engines.node
-        );
-        process.exit(1);
+        name: pkgSpecArr[0],
+        version: pkgSpecArr[1]
     }
 }
 
-
-function checkAppName(appName) {
-    const validationResult = validateProjectName(appName);
-    if (!validationResult.validForNewPackages) {
-        console.error(
-            chalk.red(
-                `Cannot create a project named ${chalk.green(
-                    `"${appName}"`
-                )} because of npm naming restrictions:\n`
-            )
-        );
-        [
-            ...(validationResult.errors || []),
-            ...(validationResult.warnings || []),
-        ].forEach(error => {
-            console.error(chalk.red(`  * ${error}`));
-        });
-        console.error(chalk.red('\nPlease choose a different project name.'));
-        process.exit(1);
-    }
-
-    // TODO: there should be a single place that holds the dependencies
-    const dependencies = ['spl-js-engine', 'kleur', 'yargs-parser'].sort();
-    if (dependencies.includes(appName)) {
-        console.error(
-            chalk.red(
-                `Cannot create a project named ${chalk.green(
-                    `"${appName}"`
-                )} because a dependency with the same name exists.\n` +
-                `Due to the way npm works, the following names are not allowed:\n\n`
-            ) +
-            chalk.cyan(dependencies.map(depName => `  ${depName}`).join('\n')) +
-            chalk.red('\n\nPlease choose a different project name.')
-        );
-        process.exit(1);
-    }
+function setupReactSwc(root, isTs) {
+    editFile(path.resolve(root, "package.json"), content => {
+        return content.replace(
+            /"@vitejs\/plugin-react": ".+?"/,
+            `"@vitejs/plugin-react-swc": "^3.5.0"`
+        )
+    })
+    editFile(path.resolve(root, `vite.config.${isTs ? "ts" : "js"}`), content => {
+        return content.replace("@vitejs/plugin-react", "@vitejs/plugin-react-swc")
+    })
 }
 
-function checkNpmVersion() {
-    let hasMinNpm = false;
-    let npmVersion = null;
-    try {
-        npmVersion = execSync('npm --version').toString().trim();
-        hasMinNpm = semver.gte(npmVersion, '6.0.0');
-    } catch (err) {
-        // ignore
-    }
-    return {
-        hasMinNpm: hasMinNpm,
-        npmVersion: npmVersion,
-    };
-}
-
-function checkYarnVersion() {
-    const minYarnPnp = '1.12.0';
-    const maxYarnPnp = '2.0.0';
-    let hasMinYarnPnp = false;
-    let hasMaxYarnPnp = false;
-    let yarnVersion = null;
-    try {
-        yarnVersion = execSync('yarnpkg --version').toString().trim();
-        if (semver.valid(yarnVersion)) {
-            hasMinYarnPnp = semver.gte(yarnVersion, minYarnPnp);
-            hasMaxYarnPnp = semver.lt(yarnVersion, maxYarnPnp);
-        } else {
-            // Handle non-semver compliant yarn version strings, which yarn currently
-            // uses for nightly builds. The regex truncates anything after the first
-            // dash. See #5362.
-            const trimmedYarnVersionMatch = /^(.+?)[-+].+$/.exec(yarnVersion);
-            if (trimmedYarnVersionMatch) {
-                const trimmedYarnVersion = trimmedYarnVersionMatch.pop();
-                hasMinYarnPnp = semver.gte(trimmedYarnVersion, minYarnPnp);
-                hasMaxYarnPnp = semver.lt(trimmedYarnVersion, maxYarnPnp);
-            }
-        }
-    } catch (err) {
-        // ignore
-    }
-    return {
-        hasMinYarnPnp: hasMinYarnPnp,
-        hasMaxYarnPnp: hasMaxYarnPnp,
-        yarnVersion: yarnVersion,
-    };
-}
-
-function makeCaretRange(dependencies, name) {
-    const version = dependencies[name];
-
-    if (typeof version === 'undefined') {
-        console.error(chalk.red(`Missing ${name} dependency in package.json`));
-        process.exit(1);
-    }
-
-    let patchedVersion = `^${version}`;
-
-    if (!semver.validRange(patchedVersion)) {
-        console.error(
-            `Unable to patch ${name} dependency version because version ${chalk.red(
-                version
-            )} will become invalid ${chalk.red(patchedVersion)}`
-        );
-        patchedVersion = version;
-    }
-
-    dependencies[name] = patchedVersion;
-}
-
-function setCaretRangeForRuntimeDeps(packageName) {
-    const packagePath = path.join(process.cwd(), 'package.json');
-    const packageJson = require(packagePath);
-
-    if (typeof packageJson.dependencies === 'undefined') {
-        console.error(chalk.red('Missing dependencies in package.json'));
-        process.exit(1);
-    }
-
-    const packageVersion = packageJson.dependencies[packageName];
-    if (typeof packageVersion === 'undefined') {
-        console.error(chalk.red(`Unable to find ${packageName} in package.json`));
-        process.exit(1);
-    }
-
-    makeCaretRange(packageJson.dependencies, 'spl-js-engine');
-    makeCaretRange(packageJson.dependencies, 'kleur');
-    makeCaretRange(packageJson.dependencies, 'yargs-parser');
-
-    fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + os.EOL);
+function editFile(file, callback) {
+    const content = fs.readFileSync(file, "utf-8")
+    fs.writeFileSync(file, callback(content), "utf-8")
 }
 
 
-function isSafeToCreateProjectIn(root, name) {
-    const validFiles = [
-        '.DS_Store',
-        '.git',
-        '.gitattributes',
-        '.gitignore',
-        '.gitlab-ci.yml',
-        '.hg',
-        '.hgcheck',
-        '.hgignore',
-        '.idea',
-        '.npmignore',
-        '.travis.yml',
-        'docs',
-        'LICENSE',
-        'README.md',
-        'mkdocs.yml',
-        'Thumbs.db',
-    ];
-    // These files should be allowed to remain on a failed install, but then
-    // silently removed during the next create.
-    const errorLogFilePatterns = [
-        'npm-debug.log',
-        'yarn-error.log',
-        'yarn-debug.log',
-    ];
-    const isErrorLog = file => {
-        return errorLogFilePatterns.some(pattern => file.startsWith(pattern));
-    };
-
-    const conflicts = fs
-        .readdirSync(root)
-        .filter(file => !validFiles.includes(file))
-        // IntelliJ IDEA creates module files before CRA is launched
-        .filter(file => !/\.iml$/.test(file))
-        // Don't treat log files from previous installation as conflicts
-        .filter(file => !isErrorLog(file));
-
-    if (conflicts.length > 0) {
-        console.log(
-            `The directory ${chalk.green(name)} contains files that could conflict:`
-        );
-        console.log();
-        for (const file of conflicts) {
-            try {
-                const stats = fs.lstatSync(path.join(root, file));
-                if (stats.isDirectory()) {
-                    console.log(`  ${chalk.blue(`${file}/`)}`);
-                } else {
-                    console.log(`  ${file}`);
-                }
-            } catch (e) {
-                console.log(`  ${file}`);
-            }
-        }
-        console.log();
-        console.log(
-            'Either try using a new directory name, or remove the files listed above.'
-        );
-
-        return false;
-    }
-
-    // Remove any log files from a previous installation.
-    fs.readdirSync(root).forEach(file => {
-        if (isErrorLog(file)) {
-            fs.removeSync(path.join(root, file));
-        }
-    });
-    return true;
-}
-
-
-function install(root, useYarn, usePnp, dependencies, verbose, isOnline) {
-    return new Promise((resolve, reject) => {
-        let command;
-        let args;
-        if (useYarn) {
-            command = 'yarnpkg';
-            args = ['add', '--exact'];
-            if (!isOnline) {
-                args.push('--offline');
-            }
-            if (usePnp) {
-                args.push('--enable-pnp');
-            }
-            [].push.apply(args, dependencies);
-
-            // Explicitly set cwd() to work around issues like
-            // https://github.com/facebook/create-react-app/issues/3326.
-            // Unfortunately we can only do this for Yarn because npm support for
-            // equivalent --prefix flag doesn't help with this issue.
-            // This is why for npm, we run checkThatNpmCanReadCwd() early instead.
-            args.push('--cwd');
-            args.push(root);
-
-            if (!isOnline) {
-                console.log(chalk.yellow('You appear to be offline.'));
-                console.log(chalk.yellow('Falling back to the local Yarn cache.'));
-                console.log();
-            }
-        } else {
-            command = 'npm';
-            args = [
-                'install',
-                '--no-audit', // https://github.com/facebook/create-react-app/issues/11174
-                '--save',
-                '--save-exact',
-                '--loglevel',
-                'error',
-            ].concat(dependencies);
-
-            if (usePnp) {
-                console.log(chalk.yellow("NPM doesn't support PnP."));
-                console.log(chalk.yellow('Falling back to the regular installs.'));
-                console.log();
-            }
-        }
-
-        if (verbose) {
-            args.push('--verbose');
-        }
-
-        const child = spawn(command, args, { stdio: 'inherit' });
-        child.on('close', code => {
-            if (code !== 0) {
-                reject({
-                    command: `${command} ${args.join(' ')}`,
-                });
-                return;
-            }
-            resolve();
-        });
-    });
-}
-
-
-function run(
-    root,
-    appName,
-    version,
-    verbose,
-    originalDirectory,
-    template,
-    useYarn,
-    usePnp
-) {
-    Promise.all([
-        getInstallPackage(version, originalDirectory)
-    ]).then(([packageToInstall]) => {
-        const allDependencies = ['spl-js-engine', 'kleur', 'yargs-parser'];
-
-        console.log('Installing packages. This might take a couple of minutes.');
-
-        Promise.all([
-            getPackageInfo('spl-js-engine'),
-            getPackageInfo('kleur'),
-            getPackageInfo('yargs-parser'),
-        ])
-            .then(([packageInfo]) =>
-                checkIfOnline(useYarn).then(isOnline => ({
-                    isOnline,
-                    packageInfo
-                }))
-            )
-            .then(({ isOnline, packageInfo }) => {
-                console.log(
-                    `Installing ${chalk.cyan(packageInfo.name)}, ${chalk.cyan(
-                        'kleur'
-                    )}, ${chalk.cyan('yargs-parser')} ...`
-                );
-                console.log();
-
-                return install(
-                    root,
-                    useYarn,
-                    usePnp,
-                    allDependencies,
-                    verbose,
-                    isOnline
-                ).then(() => ({
-                    packageInfo
-                }));
-            })
-            .then(async ({ packageInfo }) => {
-                const packageName = packageInfo.name;
-                const templateName = undefined;
-                checkNodeVersion(packageName);
-                setCaretRangeForRuntimeDeps(packageName);
-            })
-            .catch(reason => {
-                console.log();
-                console.log('Aborting installation.');
-                if (reason.command) {
-                    console.log(`  ${chalk.cyan(reason.command)} has failed.`);
-                } else {
-                    console.log(
-                        chalk.red('Unexpected error. Please report it as a bug:')
-                    );
-                    console.log(reason);
-                }
-                console.log();
-
-                // On 'exit' we will delete these files from target directory.
-                const knownGeneratedFiles = ['package.json', 'node_modules'];
-                const currentFiles = fs.readdirSync(path.join(root));
-                currentFiles.forEach(file => {
-                    knownGeneratedFiles.forEach(fileToMatch => {
-                        // This removes all knownGeneratedFiles.
-                        if (file === fileToMatch) {
-                            console.log(`Deleting generated file... ${chalk.cyan(file)}`);
-                            fs.removeSync(path.join(root, file));
-                        }
-                    });
-                });
-                const remainingFiles = fs.readdirSync(path.join(root));
-                if (!remainingFiles.length) {
-                    // Delete target folder if empty
-                    console.log(
-                        `Deleting ${chalk.cyan(`${appName}/`)} from ${chalk.cyan(
-                            path.resolve(root, '..')
-                        )}`
-                    );
-                    process.chdir(path.resolve(root, '..'));
-                    fs.removeSync(path.join(root));
-                }
-                console.log('Done.');
-                process.exit(1);
-            });
-    });
-}
-
-function executeNodeScript({ cwd, args }, data, source) {
-    return new Promise((resolve, reject) => {
-        const child = spawn(
-            process.execPath,
-            [...args, '-e', source, '--', JSON.stringify(data)],
-            { cwd, stdio: 'inherit' }
-        );
-
-        child.on('close', code => {
-            if (code !== 0) {
-                reject({
-                    command: `node ${args.join(' ')}`,
-                });
-                return;
-            }
-            resolve();
-        });
-    });
-}
-
-function checkIfOnline(useYarn) {
-    if (!useYarn) {
-        // Don't ping the Yarn registry.
-        // We'll just assume the best case.
-        return Promise.resolve(true);
-    }
-
-    return new Promise(resolve => {
-        dns.lookup('registry.yarnpkg.com', err => {
-            let proxy;
-            if (err != null && (proxy = getProxy())) {
-                // If a proxy is defined, we likely can't resolve external hostnames.
-                // Try to resolve the proxy name as an indication of a connection.
-                dns.lookup(url.parse(proxy).hostname, proxyErr => {
-                    resolve(proxyErr == null);
-                });
-            } else {
-                resolve(err == null);
-            }
-        });
-    });
-}
-
-
-function getInstallPackage(version, originalDirectory) {
-    let packageToInstall = 'spl-js-engine';
-    const validSemver = semver.valid(version);
-    if (validSemver) {
-        packageToInstall += `@${validSemver}`;
-    } else if (version) {
-        if (version[0] === '@' && !version.includes('/')) {
-            packageToInstall += version;
-        } else if (version.match(/^file:/)) {
-            packageToInstall = `file:${path.resolve(
-                originalDirectory,
-                version.match(/^file:(.*)?$/)[1]
-            )}`;
-        } else {
-            // for tar.gz or alternative paths
-            packageToInstall = version;
-        }
-    }
-}
-
-function getPackageInfo(installPackage) {
-    if (installPackage.match(/^.+\.(tgz|tar\.gz)$/)) {
-        return getTemporaryDirectory()
-            .then(obj => {
-                let stream;
-                if (/^http/.test(installPackage)) {
-                    stream = hyperquest(installPackage);
-                } else {
-                    stream = fs.createReadStream(installPackage);
-                }
-                return extractStream(stream, obj.tmpdir).then(() => obj);
-            })
-            .then(obj => {
-                const { name, version } = require(path.join(
-                    obj.tmpdir,
-                    'package.json'
-                ));
-                obj.cleanup();
-                return { name, version };
-            })
-            .catch(err => {
-                // The package name could be with or without semver version, e.g. react-scripts-0.2.0-alpha.1.tgz
-                // However, this function returns package name only without semver version.
-                console.log(
-                    `Could not extract the package name from the archive: ${err.message}`
-                );
-                const assumedProjectName = installPackage.match(
-                    /^.+\/(.+?)(?:-\d+.+)?\.(tgz|tar\.gz)$/
-                )[1];
-                console.log(
-                    `Based on the filename, assuming it is "${chalk.cyan(
-                        assumedProjectName
-                    )}"`
-                );
-                return Promise.resolve({ name: assumedProjectName });
-            });
-    } else if (installPackage.startsWith('git+')) {
-        // Pull package name out of git urls e.g:
-        // git+https://github.com/mycompany/react-scripts.git
-        // git+ssh://github.com/mycompany/react-scripts.git#v1.2.3
-        return Promise.resolve({
-            name: installPackage.match(/([^/]+)\.git(#.*)?$/)[1],
-        });
-    } else if (installPackage.match(/.+@/)) {
-        // Do not match @scope/ when stripping off @version or @tag
-        return Promise.resolve({
-            name: installPackage.charAt(0) + installPackage.substr(1).split('@')[0],
-            version: installPackage.split('@')[1],
-        });
-    } else if (installPackage.match(/^file:/)) {
-        const installPackagePath = installPackage.match(/^file:(.*)?$/)[1];
-        const { name, version } = require(path.join(
-            installPackagePath,
-            'package.json'
-        ));
-        return Promise.resolve({ name, version });
-    }
-    return Promise.resolve({ name: installPackage });
-}
-
-
-function getTemplateInstallPackage(template, originalDirectory) {
-    let templateToInstall = 'cra-template';
-    if (template) {
-        if (template.match(/^file:/)) {
-            templateToInstall = `file:${path.resolve(
-                originalDirectory,
-                template.match(/^file:(.*)?$/)[1]
-            )}`;
-        } else if (
-            template.includes('://') ||
-            template.match(/^.+\.(tgz|tar\.gz)$/)
-        ) {
-            // for tar.gz or alternative paths
-            templateToInstall = template;
-        } else {
-            // Add prefix 'cra-template-' to non-prefixed templates, leaving any
-            // @scope/ and @version intact.
-            const packageMatch = template.match(/^(@[^/]+\/)?([^@]+)?(@.+)?$/);
-            const scope = packageMatch[1] || '';
-            const templateName = packageMatch[2] || '';
-            const version = packageMatch[3] || '';
-
-            if (
-                templateName === templateToInstall ||
-                templateName.startsWith(`${templateToInstall}-`)
-            ) {
-                // Covers:
-                // - cra-template
-                // - @SCOPE/cra-template
-                // - cra-template-NAME
-                // - @SCOPE/cra-template-NAME
-                templateToInstall = `${scope}${templateName}${version}`;
-            } else if (version && !scope && !templateName) {
-                // Covers using @SCOPE only
-                templateToInstall = `${version}/${templateToInstall}`;
-            } else {
-                // Covers templates without the `cra-template` prefix:
-                // - NAME
-                // - @SCOPE/NAME
-                templateToInstall = `${scope}${templateToInstall}-${templateName}${version}`;
-            }
-        }
-    }
-
-    return Promise.resolve(templateToInstall);
-}
-
-
-module.exports = {
-    init,
-};
+init().catch(err => {
+    console.error(err)
+});
