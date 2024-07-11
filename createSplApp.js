@@ -32,7 +32,6 @@ With no arguments, start the CLI in interactive mode.
 Options:
   -t, --template NAME        use a specific template
   -h, --help                 display this help message
-  -v, --version              output the version number
 
 Available templates:
 ${yellow('basic-web')}
@@ -113,13 +112,6 @@ async function init() {
     let targetDir = argTargetDir || defaultTargetDir
     const getProjectName = () =>
         targetDir === "." ? path.basename(path.resolve()) : targetDir
-
-    const version = argv.version
-    if (version) {
-        const v = JSON.parse(readFileSync('./package.json', 'utf-8')).version
-        console.log(`Version: ${bold(v)}`)
-        return
-    }
 
     let result
 
