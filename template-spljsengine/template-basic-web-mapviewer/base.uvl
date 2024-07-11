@@ -1,0 +1,8 @@
+imports
+    base_component
+    mapviewer_component
+features
+    <spl-name>
+        mandatory
+            base_component.WebApplication
+            mapviewer_component.MapViewer
