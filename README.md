@@ -37,6 +37,10 @@ template-<derivation-engine-name>
 
 A derivation engine template always has a `template-base` folder, which contains the basic structure of the SPL application. The other templates are the specific templates for the different types of SPL applications that can be created for that derivation engine.
 
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests.
+
 ## Author
 
 Victor Lamas

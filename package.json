@@ -1,6 +1,11 @@
 {
   "name": "create-spl",
-  "version": "0.0.8",
+  "version": "0.0.9",
+  "homepage": "https://github.com/lbdudc/create-spl#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lbdudc/create-spl.git"
+  },
   "keywords": [
     "spl"
   ],
