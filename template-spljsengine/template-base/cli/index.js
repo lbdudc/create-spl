@@ -3,6 +3,7 @@
 
 import { readFileSync } from "fs";
 import * as colors from "kleur/colors";
+import { red } from "kolorist";
 import yargs from "yargs-parser";
 
 const pck = readFileSync(process.cwd() + "/package.json", "utf8");
@@ -17,6 +18,8 @@ async function printHelp() {
         tables: {
             Commands: [
                 ["add", "Add an integration."],
+                ["modify", "Modify an integration."],
+                ["remove", "Remove an integration."],
                 ["generate", "Generate a new product."],
             ],
             "Global Flags": [
@@ -36,6 +39,8 @@ function resolveCommand(flags) {
     if (flags.version) return "version";
     const supportedCommands = /* @__PURE__ */ new Set([
         "add",
+        "modify",
+        "remove",
         "generate"
     ]);
     if (supportedCommands.has(cmd)) {
@@ -59,6 +64,22 @@ async function runCommand(cmd, flags) {
             const { add } = await import("./add/index.js");
             const packages = flags._.slice(3);
             await add(packages, { flags });
+            return;
+        }
+        case "modify": {
+            const { modify } = await import("./modify/index.js");
+            const packages = flags._.slice(3);
+            if (packages.length === 0 || packages.length !== 2) {
+                console.error(red("Error: modify command requires two package names as arguments."));
+                return;
+            }
+            await modify(packages, { flags });
+            return;
+        }
+        case "remove": {
+            const { remove } = await import("./remove/index.js");
+            const packages = flags._.slice(3);
+            await remove(packages, { flags });
             return;
         }
         case "generate": {

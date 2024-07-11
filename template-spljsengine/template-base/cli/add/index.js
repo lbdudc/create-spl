@@ -1,5 +1,5 @@
 import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
-import { addDependency, changeUvlFile, checkSPLPackage, rollBackAddDependency } from "./files.js";
+import { addDependency, changeUvlFile, checkSPLPackage, rollBackAddDependency } from "./utils.js";
 
 async function add(names, { flags }) {
     console.log(`${bold('Adding packages:')} ${green(names)}\n`);

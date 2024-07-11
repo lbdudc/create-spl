@@ -1,10 +1,11 @@
-import fs from 'node:fs'
+import fs, { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import spawn from 'cross-spawn'
 import minimist from 'minimist'
 import prompts from 'prompts'
 import {
+    bold,
     cyan,
     green,
     magenta,
@@ -15,7 +16,7 @@ import {
 
 const argv = minimist(process.argv.slice(2), {
     default: { help: false },
-    alias: { h: "help", t: "template" },
+    alias: { h: "help", t: "template", help: "h", v: "version", version: "v" },
     string: ["_"]
 })
 const cwd = process.cwd()
@@ -30,6 +31,8 @@ With no arguments, start the CLI in interactive mode.
 
 Options:
   -t, --template NAME        use a specific template
+  -h, --help                 display this help message
+  -v, --version              output the version number
 
 Available templates:
 ${yellow('basic-web')}
@@ -110,6 +113,13 @@ async function init() {
     let targetDir = argTargetDir || defaultTargetDir
     const getProjectName = () =>
         targetDir === "." ? path.basename(path.resolve()) : targetDir
+
+    const version = argv.version
+    if (version) {
+        const v = JSON.parse(readFileSync('./package.json', 'utf-8')).version
+        console.log(`Version: ${bold(v)}`)
+        return
+    }
 
     let result
 
@@ -427,24 +437,6 @@ function pkgFromUserAgent(userAgent) {
         version: pkgSpecArr[1]
     }
 }
-
-function setupReactSwc(root, isTs) {
-    editFile(path.resolve(root, "package.json"), content => {
-        return content.replace(
-            /"@vitejs\/plugin-react": ".+?"/,
-            `"@vitejs/plugin-react-swc": "^3.5.0"`
-        )
-    })
-    editFile(path.resolve(root, `vite.config.${isTs ? "ts" : "js"}`), content => {
-        return content.replace("@vitejs/plugin-react", "@vitejs/plugin-react-swc")
-    })
-}
-
-function editFile(file, callback) {
-    const content = fs.readFileSync(file, "utf-8")
-    fs.writeFileSync(file, callback(content), "utf-8")
-}
-
 
 init().catch(err => {
     console.error(err)
