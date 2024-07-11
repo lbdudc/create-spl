@@ -19,6 +19,7 @@ async function printHelp() {
             Commands: [
                 ["add", "Add an integration."],
                 ["modify", "Modify an integration."],
+                ["remove", "Remove an integration."],
                 ["generate", "Generate a new product."],
             ],
             "Global Flags": [
@@ -39,6 +40,7 @@ function resolveCommand(flags) {
     const supportedCommands = /* @__PURE__ */ new Set([
         "add",
         "modify",
+        "remove",
         "generate"
     ]);
     if (supportedCommands.has(cmd)) {
@@ -72,6 +74,12 @@ async function runCommand(cmd, flags) {
                 return;
             }
             await modify(packages, { flags });
+            return;
+        }
+        case "remove": {
+            const { remove } = await import("./remove/index.js");
+            const packages = flags._.slice(3);
+            await remove(packages, { flags });
             return;
         }
         case "generate": {
