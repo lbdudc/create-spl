@@ -1,8 +1,8 @@
 # Create SPL
 
 ![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node.js Version](https://img.shields.io/badge/node-%3E%3D%2012.0.0-brightgreen.svg)
-![npm version](https://badge.fury.io/js/code-uploader.svg)
+![Node.js Version](https://img.shields.io/badge/node-%3E%3D%2020.0.0-brightgreen.svg)
+[![npm version](https://badge.fury.io/js/create-spl.svg)](https://badge.fury.io/js/create-spl)
 
 ## Description
 
