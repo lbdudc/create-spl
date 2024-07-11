@@ -1,0 +1,6 @@
+imports
+    base_component
+features
+    <spl-name>
+        mandatory
+            base_component.WebApplication

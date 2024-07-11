@@ -1,0 +1,15 @@
+{
+    "name": "template-spljsengine",
+    "version": "0.1.0",
+    "description": "A template for creating a new project using the SPL JS Engine",
+    "main": "index.js",
+    "private": true,
+    "type": "module",
+    "bin": {},
+    "dependencies": {
+        "@lbdudc/mapviewer": "^1.0.0",
+        "kleur": "^4.1.5",
+        "spl-js-engine": "^4.0.5",
+        "yargs-parser": "^20.2.9"
+    }
+}

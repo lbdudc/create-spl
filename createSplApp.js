@@ -23,7 +23,7 @@ const cwd = process.cwd()
 
 // prettier-ignore
 const helpMessage = `\
-Usage: create-spl-app [OPTION]... [DIRECTORY]
+Usage: create-spl [OPTION]... [DIRECTORY]
 
 Create a new SPL app project in JavaScript
 With no arguments, start the CLI in interactive mode.
@@ -49,7 +49,7 @@ const FRAMEWORKS = [
                 color: yellow,
             },
             {
-                name: 'basic-web-with-mapviewer',
+                name: 'basic-web-mapviewer',
                 display: 'basic-web-with-mapviewer ↗',
                 color: green,
             },
@@ -229,11 +229,6 @@ async function init() {
 
     // determine template
     let template = variant || framework?.name || argTemplate
-    let isReactSwc = false
-    if (template.includes("-swc")) {
-        isReactSwc = true
-        template = template.replace("-swc", "")
-    }
 
     const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
     const pkgManager = pkgInfo ? pkgInfo.name : "npm"
@@ -282,15 +277,46 @@ async function init() {
         process.exit(status ?? 0)
     }
 
-    console.log(`\nScaffolding project in ${root}...`)
+    let calcFramework = framework;
 
+    if (argTemplate) {
+        // find the framework that the template belongs to
+        calcFramework = FRAMEWORKS.find(f =>
+            f.variants?.map(v => v.name).includes(template)
+        )
+    }
+
+    // First add the template from the engine
+    const engineTemplateDir = path.resolve(
+        fileURLToPath(import.meta.url),
+        "..",
+        `template-${framework?.name || calcFramework.name}`,
+        "template-base"
+    )
+
+    // Then add the template from the framework
     const templateDir = path.resolve(
         fileURLToPath(import.meta.url),
         "..",
+        `template-${framework?.name || calcFramework.name}`,
         `template-${template}`
     )
 
-    const write = (file, content) => {
+    let write = (file, content) => {
+        const targetPath = path.join(root, renameFiles[file] ?? file)
+        if (content) {
+            fs.writeFileSync(targetPath, content)
+        } else {
+            copy(path.join(engineTemplateDir, file), targetPath)
+        }
+    }
+
+    const engineFiles = fs.readdirSync(engineTemplateDir)
+    for (const file of engineFiles.filter(f => f !== "package.json")) {
+        write(file)
+    }
+
+    write = (file, content) => {
         const targetPath = path.join(root, renameFiles[file] ?? file)
         if (content) {
             fs.writeFileSync(targetPath, content)
@@ -299,8 +325,8 @@ async function init() {
         }
     }
 
-    const files = fs.readdirSync(templateDir)
-    for (const file of files.filter(f => f !== "package.json")) {
+    const templateFiles = fs.readdirSync(templateDir)
+    for (const file of templateFiles) {
         write(file)
     }
 
@@ -313,20 +339,8 @@ async function init() {
 
     write("package.json", JSON.stringify(pkg, null, 2) + "\n")
 
-    const uvlTemplate = `
-imports
-    base_component
-features
-    ${pkg.name}
-        mandatory
-            base_component.WebApplication`;
-
-    write("base.uvl", uvlTemplate)
-
-
-    if (isReactSwc) {
-        setupReactSwc(root, template.endsWith("-ts"))
-    }
+    const uvl = fs.readFileSync(path.join(templateDir, `base.uvl`), "utf-8")
+    write("base.uvl", uvl.replace("<spl-name>", pkg.name))
 
     const cdProjectName = path.relative(cwd, root)
     console.log(`\nDone. Now run:\n`)
