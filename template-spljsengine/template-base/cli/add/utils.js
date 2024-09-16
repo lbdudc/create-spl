@@ -2,6 +2,7 @@ import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
 import { readFileSync, writeFileSync, readdirSync } from "fs";
 import { execSync } from "child_process";
 import path, { sep } from "path";
+import vm from "vm";
 
 /**
  * Function that adds dependency to the project
@@ -183,8 +184,6 @@ async function changeUvlFile(names, { flags }) {
     // find a .uvl file in the node_modules folder
     const uvlFiles = await findUvlFile(names, { flags });
 
-    console.log(uvlFiles);
-
     uvl.split("\n").forEach((line, index) => {
         // if it finds the features line, then insert the names before it
         // if line includes "features" in the next line, then insert the names in the next line
@@ -216,6 +215,30 @@ async function changeUvlFile(names, { flags }) {
         return;
     }
 }
+
+async function changeSplJsEngine(names, { flags }) {
+
+    console.log(`\n${cyan("Changing")} ${bold("splConfig.js")} ${dim("file")}`);
+
+    const uvlFiles = await findUvlFile(names, { flags });
+
+    try {
+        const splConfig = path.join(process.cwd(), 'src', 'splConfig.js');
+        let splConfigContent = readFileSync(splConfig, "utf-8");
+
+        // find the modules variable and add the new modules to it
+
+        splConfigContent = splConfigContent.replace(splModulesConfig, newSplModulesConfig);
+
+        // write the file
+
+    }
+    catch (e) {
+        console.log(`Error reading splConfig.js file: ${e.message}`);
+        return;
+    }
+}
+
 
 
 async function findUvlFile(names, { flags }) {
@@ -262,6 +285,7 @@ async function findUvlFile(names, { flags }) {
 export {
     addDependency,
     changeUvlFile,
+    changeSplJsEngine,
     checkSPLPackage,
     rollBackAddDependency
 }

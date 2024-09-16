@@ -1,5 +1,5 @@
 import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
-import { addDependency, changeUvlFile, checkSPLPackage, rollBackAddDependency } from "./utils.js";
+import { addDependency, changeUvlFile, checkSPLPackage, rollBackAddDependency, changeSplJsEngine } from "./utils.js";
 
 async function add(names, { flags }) {
     console.log(`${bold('Adding packages:')} ${green(names)}\n`);
@@ -28,7 +28,7 @@ async function add(names, { flags }) {
     await changeUvlFile(packages.filter((p) => p.valid).map((p) => p.name), { flags });
 
     // // change the spl-js-engine file to include the new package
-    // // await changeSplJsEngine(names, { flags });
+    await changeSplJsEngine(packages.filter((p) => p.valid).map((p) => p.name), { flags });
 }
 
 
