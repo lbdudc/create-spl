@@ -1,0 +1,845 @@
+{
+  "basicData": {
+    "name": "User Management",
+    "version": "0.1.0",
+    "database": {}
+  },
+  "dataModel": {
+    "cells": [
+      {
+        "type": "custom.Class",
+        "name": "Town",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true
+          },
+          {
+            "class": "String",
+            "name": "name",
+            "displayString": true
+          },
+          {
+            "name": "code",
+            "class": "Integer"
+          },
+          {
+            "class": "Point",
+            "name": "location"
+          }
+        ],
+        "position": {
+          "x": 10,
+          "y": 10
+        },
+        "size": {
+          "width": 100,
+          "height": 70
+        },
+        "angle": 0,
+        "id": "b315a0f3-be6e-4b02-9ef6-85201912bd76",
+        "z": 1,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 90
+          },
+          ".uml-class-properties-rect": {
+            "height": 62,
+            "transform": "translate(0,23)",
+            "width": 90
+          },
+          ".uml-class-name-text": {
+            "text": "Town"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nname: String\ncode: Integer\nlocation: Point"
+          }
+        }
+      },
+      {
+        "type": "custom.Class",
+        "name": "Municipality",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true
+          },
+          {
+            "class": "String",
+            "name": "name",
+            "displayString": true
+          },
+          {
+            "name": "ineCode",
+            "class": "String"
+          },
+          {
+            "name": "population",
+            "class": "Integer"
+          },
+          {
+            "class": "MultiPolygon",
+            "name": "extension"
+          }
+        ],
+        "position": {
+          "x": 305,
+          "y": 17
+        },
+        "size": {
+          "width": 150,
+          "height": 90
+        },
+        "angle": 0,
+        "id": "797d8fa4-544e-4737-9879-cdcd702fa4a2",
+        "z": 2,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 138
+          },
+          ".uml-class-properties-rect": {
+            "height": 75,
+            "transform": "translate(0,23)",
+            "width": 138
+          },
+          ".uml-class-name-text": {
+            "text": "Municipality"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nname: String\nineCode: String\npopulation: Integer\nextension: MultiPolygon"
+          }
+        }
+      },
+      {
+        "type": "custom.Class",
+        "name": "Province",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true,
+            "displayString": true
+          },
+          {
+            "class": "String",
+            "name": "name"
+          },
+          {
+            "class": "MultiPolygon",
+            "name": "extension"
+          }
+        ],
+        "position": {
+          "x": 18,
+          "y": 251
+        },
+        "size": {
+          "width": 150,
+          "height": 90
+        },
+        "angle": 0,
+        "id": "44adc049-aa47-424e-bf2b-33222021e712",
+        "z": 3,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 138
+          },
+          ".uml-class-properties-rect": {
+            "height": 49,
+            "transform": "translate(0,23)",
+            "width": 138
+          },
+          ".uml-class-name-text": {
+            "text": "Province"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nname: String\nextension: MultiPolygon"
+          }
+        }
+      },
+      {
+        "type": "custom.Class",
+        "name": "Region",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true,
+            "displayString": true
+          },
+          {
+            "class": "String",
+            "name": "name"
+          },
+          {
+            "class": "MultiPolygon",
+            "name": "extension"
+          }
+        ],
+        "position": {
+          "x": 206,
+          "y": 175
+        },
+        "size": {
+          "width": 150,
+          "height": 90
+        },
+        "angle": 0,
+        "id": "8bc13969-900b-4276-bcb9-101ece5daf6f",
+        "z": 4,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 138
+          },
+          ".uml-class-properties-rect": {
+            "height": 49,
+            "transform": "translate(0,23)",
+            "width": 138
+          },
+          ".uml-class-name-text": {
+            "text": "Region"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nname: String\nextension: MultiPolygon"
+          }
+        }
+      },
+      {
+        "type": "custom.Class",
+        "name": "Car",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true,
+            "displayString": true
+          },
+          {
+            "class": "String",
+            "name": "brand"
+          },
+          {
+            "class": "String",
+            "name": "model"
+          },
+          {
+            "class": "String",
+            "name": "color"
+          },
+          {
+            "class": "Point",
+            "name": "location"
+          }
+        ],
+        "position": {
+          "x": 500,
+          "y": 50
+        },
+        "size": {
+          "width": 110,
+          "height": 100
+        },
+        "angle": 0,
+        "id": "e5f07295-278f-43ac-ba0c-1ed1bc90068d",
+        "z": 5,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 90
+          },
+          ".uml-class-properties-rect": {
+            "height": 75,
+            "transform": "translate(0,23)",
+            "width": 90
+          },
+          ".uml-class-name-text": {
+            "text": "Car"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nbrand: String\nmodel: String\ncolor: String\nlocation: Point"
+          }
+        }
+      },
+      {
+        "type": "custom.Class",
+        "name": "Person",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true,
+            "displayString": true
+          },
+          {
+            "class": "String",
+            "name": "firstName"
+          },
+          {
+            "class": "String",
+            "name": "lastName"
+          },
+          {
+            "class": "STATUS",
+            "name": "status"
+          }
+        ],
+        "position": {
+          "x": 300,
+          "y": 300
+        },
+        "size": {
+          "width": 160,
+          "height": 100
+        },
+        "angle": 0,
+        "id": "5e8239f1-dc7e-42f8-a990-5ffbe107479a",
+        "z": 6,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 102
+          },
+          ".uml-class-properties-rect": {
+            "height": 62,
+            "transform": "translate(0,23)",
+            "width": 102
+          },
+          ".uml-class-name-text": {
+            "text": "Person"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nfirstName: String\nlastName: String\nstatus: STATUS"
+          }
+        }
+      },
+      {
+        "type": "custom.Class",
+        "name": "Address",
+        "properties": [
+          {
+            "class": "Long",
+            "name": "id",
+            "pk": true,
+            "displayString": true
+          },
+          {
+            "class": "Integer",
+            "name": "houseNumber"
+          },
+          {
+            "class": "String",
+            "name": "streetName"
+          },
+          {
+            "class": "String",
+            "name": "town"
+          },
+          {
+            "class": "String",
+            "name": "postcode"
+          },
+          {
+            "class": "Point",
+            "name": "location"
+          }
+        ],
+        "position": {
+          "x": 700,
+          "y": 300
+        },
+        "size": {
+          "width": 140,
+          "height": 100
+        },
+        "angle": 0,
+        "id": "fda68cde-d8df-4904-af04-a47c408e9fc0",
+        "z": 7,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 23,
+            "transform": "translate(0,0)",
+            "width": 120
+          },
+          ".uml-class-properties-rect": {
+            "height": 88,
+            "transform": "translate(0,23)",
+            "width": 120
+          },
+          ".uml-class-name-text": {
+            "text": "Address"
+          },
+          ".uml-class-properties-text": {
+            "text": "id: Long\nhouseNumber: Integer\nstreetName: String\ntown: String\npostcode: String\nlocation: Point"
+          }
+        }
+      },
+      {
+        "type": "custom.Enum",
+        "name": "STATUS",
+        "values": ["STUDENT", "WORKER", "RETIRED"],
+        "position": {
+          "x": 140,
+          "y": 350
+        },
+        "size": {
+          "width": 120,
+          "height": 100
+        },
+        "angle": 0,
+        "id": "11b3522e-086f-44c6-bae9-5568e87ea292",
+        "z": 8,
+        "attrs": {
+          ".uml-class-name-rect": {
+            "height": 36,
+            "transform": "translate(0,0)",
+            "width": 70
+          },
+          ".uml-class-values-rect": {
+            "height": 49,
+            "transform": "translate(0,36)",
+            "width": 70
+          },
+          ".uml-class-name-text": {
+            "text": "<<enum>>\nSTATUS"
+          },
+          ".uml-class-values-text": {
+            "text": "STUDENT\nWORKER\nRETIRED"
+          }
+        }
+      },
+      {
+        "type": "custom.Association",
+        "smooth": true,
+        "bidirectional": true,
+        "sourceOpts": {
+          "label": "capital",
+          "multiplicity": "1"
+        },
+        "targetOpts": {
+          "label": "region",
+          "multiplicity": "0..1"
+        },
+        "id": "604861d7-1b9c-4eea-8030-cd127e75c3c9",
+        "labels": [
+          {
+            "position": 15,
+            "attrs": {
+              "text": {
+                "text": "0..1"
+              }
+            }
+          },
+          {
+            "position": 50,
+            "attrs": {
+              "text": {
+                "text": "region"
+              }
+            }
+          },
+          {
+            "position": -50,
+            "attrs": {
+              "text": {
+                "text": "capital"
+              }
+            }
+          },
+          {
+            "position": -15,
+            "attrs": {
+              "text": {
+                "text": "1"
+              }
+            }
+          }
+        ],
+        "source": {
+          "id": "8bc13969-900b-4276-bcb9-101ece5daf6f"
+        },
+        "target": {
+          "id": "b315a0f3-be6e-4b02-9ef6-85201912bd76"
+        },
+        "z": 9,
+        "attrs": {
+          ".marker-target": {
+            "fill": "#4b4a67",
+            "stroke": "#4b4a67",
+            "d": "M 10 0 L 0 5 L 10 10",
+            "fill-opacity": 1
+          }
+        }
+      },
+      {
+        "type": "custom.Association",
+        "smooth": true,
+        "bidirectional": true,
+        "sourceOpts": {
+          "label": "capital",
+          "multiplicity": "1"
+        },
+        "targetOpts": {
+          "label": "province",
+          "multiplicity": "0..1"
+        },
+        "id": "f218ba3e-741f-4161-a5a9-c42f4714f222",
+        "labels": [
+          {
+            "position": 15,
+            "attrs": {
+              "text": {
+                "text": "0..1"
+              }
+            }
+          },
+          {
+            "position": 50,
+            "attrs": {
+              "text": {
+                "text": "province"
+              }
+            }
+          },
+          {
+            "position": -50,
+            "attrs": {
+              "text": {
+                "text": "capital"
+              }
+            }
+          },
+          {
+            "position": -15,
+            "attrs": {
+              "text": {
+                "text": "1"
+              }
+            }
+          }
+        ],
+        "source": {
+          "id": "44adc049-aa47-424e-bf2b-33222021e712"
+        },
+        "target": {
+          "id": "b315a0f3-be6e-4b02-9ef6-85201912bd76"
+        },
+        "z": 10,
+        "attrs": {
+          ".marker-target": {
+            "fill": "#4b4a67",
+            "stroke": "#4b4a67",
+            "d": "M 10 0 L 0 5 L 10 10",
+            "fill-opacity": 1
+          }
+        }
+      },
+      {
+        "type": "custom.Association",
+        "smooth": true,
+        "bidirectional": true,
+        "sourceOpts": {
+          "label": "capital",
+          "multiplicity": "1"
+        },
+        "targetOpts": {
+          "label": "municipality",
+          "multiplicity": "0..1"
+        },
+        "id": "03c50856-a57d-4e75-a567-aa381880dcba",
+        "labels": [
+          {
+            "position": 15,
+            "attrs": {
+              "text": {
+                "text": "0..1"
+              }
+            }
+          },
+          {
+            "position": 50,
+            "attrs": {
+              "text": {
+                "text": "municipality"
+              }
+            }
+          },
+          {
+            "position": -50,
+            "attrs": {
+              "text": {
+                "text": "capital"
+              }
+            }
+          },
+          {
+            "position": -15,
+            "attrs": {
+              "text": {
+                "text": "1"
+              }
+            }
+          }
+        ],
+        "source": {
+          "id": "797d8fa4-544e-4737-9879-cdcd702fa4a2"
+        },
+        "target": {
+          "id": "b315a0f3-be6e-4b02-9ef6-85201912bd76"
+        },
+        "z": 11,
+        "attrs": {
+          ".marker-target": {
+            "fill": "#4b4a67",
+            "stroke": "#4b4a67",
+            "d": "M 10 0 L 0 5 L 10 10",
+            "fill-opacity": 1
+          }
+        }
+      },
+      {
+        "type": "custom.Association",
+        "smooth": true,
+        "bidirectional": true,
+        "sourceOpts": {
+          "label": "address",
+          "multiplicity": "1"
+        },
+        "targetOpts": {
+          "label": "person",
+          "multiplicity": "0..1"
+        },
+        "id": "c48f7232-36dd-4de7-ba65-9fbcfaae89c9",
+        "labels": [
+          {
+            "position": 15,
+            "attrs": {
+              "text": {
+                "text": "0..1"
+              }
+            }
+          },
+          {
+            "position": 50,
+            "attrs": {
+              "text": {
+                "text": "person"
+              }
+            }
+          },
+          {
+            "position": -50,
+            "attrs": {
+              "text": {
+                "text": "address"
+              }
+            }
+          },
+          {
+            "position": -15,
+            "attrs": {
+              "text": {
+                "text": "1"
+              }
+            }
+          }
+        ],
+        "source": {
+          "id": "5e8239f1-dc7e-42f8-a990-5ffbe107479a"
+        },
+        "target": {
+          "id": "fda68cde-d8df-4904-af04-a47c408e9fc0"
+        },
+        "z": 12,
+        "attrs": {
+          ".marker-target": {
+            "fill": "#4b4a67",
+            "stroke": "#4b4a67",
+            "d": "M 10 0 L 0 5 L 10 10",
+            "fill-opacity": 1
+          }
+        }
+      },
+      {
+        "type": "custom.Association",
+        "smooth": true,
+        "bidirectional": true,
+        "sourceOpts": {
+          "label": "owner",
+          "multiplicity": "1"
+        },
+        "targetOpts": {
+          "label": "cars",
+          "multiplicity": "0..*"
+        },
+        "id": "c2846f21-da23-4277-8cc9-70cc03b0ec06",
+        "labels": [
+          {
+            "position": 15,
+            "attrs": {
+              "text": {
+                "text": "0..*"
+              }
+            }
+          },
+          {
+            "position": 50,
+            "attrs": {
+              "text": {
+                "text": "cars"
+              }
+            }
+          },
+          {
+            "position": -50,
+            "attrs": {
+              "text": {
+                "text": "owner"
+              }
+            }
+          },
+          {
+            "position": -15,
+            "attrs": {
+              "text": {
+                "text": "1"
+              }
+            }
+          }
+        ],
+        "source": {
+          "id": "e5f07295-278f-43ac-ba0c-1ed1bc90068d"
+        },
+        "target": {
+          "id": "5e8239f1-dc7e-42f8-a990-5ffbe107479a"
+        },
+        "z": 13,
+        "attrs": {
+          ".marker-target": {
+            "fill": "#4b4a67",
+            "stroke": "#4b4a67",
+            "d": "M 10 0 L 0 5 L 10 10",
+            "fill-opacity": 1
+          }
+        }
+      }
+    ]
+  },
+  "features": [
+    "GraphicalUserInterface",
+    "GUI_Menu",
+    "GUI_M_Left",
+    "Tools",
+    "T_MailSender",
+    "MV_MapServer",
+    "MV_MS_GeoJSON",
+    "MV_MS_GJ_Paginated",
+    "MV_MapManagement",
+    "MV_MM_MultipleMapViewer",
+    "MV_MS_GeoJSON",
+    "MV_MS_GJ_Paginated",    
+    "MV_LayerManagement",
+    "MV_LM_BaseLayerSelector",
+    "MV_LM_CenterViewOnLayer",
+    "MV_LM_Order",
+    "MV_LM_HideLayer",
+    "MV_LM_Opacity",
+    "MV_LM_Style",
+    "MV_LM_ExternalLayer",
+    "MV_LM_StylePreview",
+    "MV_MM_MMV_MapSelectorInMapViewer",
+    "MV_T_UserGeolocation",
+    "MV_T_InformationMode",
+    "MV_T_ViewMapAsList",
+    "MV_T_ZoomWindow",
+    "UM_UserCRUD"
+  ],"mapViewer": {
+  "maps": [
+    {
+      "name": "mapa-datasets",
+      "label": "Datasets",
+      "center": {
+        "lat": 42.58,
+        "lng": -7.6,
+        "zoom": 8
+      },
+      "sortable": false,
+      "layers": [
+        {
+          "name": "base",
+          "baseLayer": true,
+          "order": 0,
+          "selected": true
+        },
+        {
+          "name": "dataset",
+          "baseLayer": false,
+          "style": "redPolygon",
+          "selected": true,
+          "order": 0
+        }
+      ],
+      "mapOptions": {
+        "minZoom": 4,
+        "maxZoom": 18
+      }
+    }
+  ],
+  "layers": [
+    {
+      "name": "base",
+      "type": "tilelayer",
+      "url": "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    },
+    {
+      "name": "dataset1",
+      "label": "Dataset1",
+      "entityName": "Region-extension",
+      "type": "geojson",
+      "defaultStyle": "redPolygon",
+      "availableStyles": ["redPolygon"],
+      "form": "Region Form",
+      "list": "Region List"
+    },
+    {
+      "name": "dataset2",
+      "label": "Dataset2",
+      "entityName": "car-location",
+      "type": "geojson",
+      "defaultStyle": "redPoint",
+      "availableStyles": ["redPoint"],
+      "form": "Car Form",
+      "list": "Car List"
+    }
+  ],
+  "styles": [
+    {
+      "name": "redPolygon",
+      "type": "GeoJSONLayerStyle",
+      "fillColor": "#FF0000",
+      "strokeColor": "#DD0000",
+      "fillOpacity": 0.6,
+      "strokeOpacity": 1
+    },
+    {
+      "name": "redPoint",
+      "type": "GeoJSONLayerStyle",
+      "fillColor": "#FF0000",
+      "strokeColor": "#DD0000",
+      "fillOpacity": 0.6,
+      "strokeOpacity": 1
+    }
+  ]
+  }
+}

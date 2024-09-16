@@ -1,6 +1,0 @@
-imports
-    base_component
-features
-    main-app
-        mandatory
-            base_component.WebApplication

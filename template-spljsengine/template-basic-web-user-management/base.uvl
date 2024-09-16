@@ -1,10 +1,8 @@
 imports
 	main_component
 	user_management_component
-	map_viewer_component	
 features
 	MainSPL
 		mandatory
 			main_component.WebApplication
 			user_management_component.UserManagement
-			map_viewer_component.MapViewer

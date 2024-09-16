@@ -1,6 +1,6 @@
 imports
-    base_component
+	main_component
 features
-    <spl-name>
-        mandatory
-            base_component.WebApplication
+	MainSPL
+		mandatory
+			main_component.WebApplication
