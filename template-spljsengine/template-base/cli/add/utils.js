@@ -30,8 +30,10 @@ async function addDependency(names) {
             }
 
             // if its a git repository, add the git url to the package.json file
+            // delete the .git extension
             if (name.startsWith("git+")) {
-                json.dependencies[name.split("/").pop()] = name;
+                const gitUrl = name.split("git+")[1];
+                json.dependencies[gitUrl.split("/").pop().split(".git")[0]] = name;
                 return;
             }
 
@@ -102,6 +104,10 @@ async function checkSPLPackage(names, { flags }) {
         let files = ["config.json", "extra.js", "transformation.js"];
         if (name.startsWith("file:") || name.startsWith("git+")) {
             name = name.split("/").pop();
+            // delete the .git extension
+            if (name.includes(".git")) {
+                name = name.split(".git")[0];
+            }
         }
 
         if (name.includes(":")) {
@@ -115,8 +121,14 @@ async function checkSPLPackage(names, { flags }) {
         readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`).forEach((file) => {
             console.log(`  ${magenta("Found")} ${bold(file)}`);
             // if the file is in the files array, remove it from the array
-            if (files.includes(file)) {
+            if (files.includes(file) || files.includes(file.split(".")[1])) {
                 files = files.filter((f) => f !== file);
+            }
+
+            // check if at least one of the files is a.uvl file
+            if (file.includes(".uvl")) {
+                console.log(`  ${green("Found")} ${bold(file)}`);
+                files = [];
             }
         });
 
@@ -166,22 +178,33 @@ async function changeUvlFile(names, { flags }) {
         return;
     }
 
-
-
     let newUvl = uvl;
 
+    // find a .uvl file in the node_modules folder
+    const uvlFiles = await findUvlFile(names, { flags });
+
+    console.log(uvlFiles);
+
     uvl.split("\n").forEach((line, index) => {
-        if (line.includes("imports")) {
-            // insert a new line with names variable
-            let newLine = line + "\n" + names.map((name) => `    ${name}`).join("\n");
+        // if it finds the features line, then insert the names before it
+        // if line includes "features" in the next line, then insert the names in the next line
+
+        if (uvl.split("\n")[index + 1] && uvl.split("\n")[index + 1].includes("features")) {
+            // insert it before the features line
+            let newLine = line + "\n" + names.map((name) =>
+                `    ${uvlFiles.filter((file) => file.name === name)[0].uvlName
+                }`).join("\n");
             newUvl = newUvl.replace(line, newLine);
         }
 
         // if it finds the project name, and the next line has the "mandatory" key
         // then insert the names in the next line after the mandatory key
-        if (line.includes(projectName) && uvl.split("\n")[index + 1].includes("mandatory")) {
-            let newLine = uvl.split("\n")[index + 1] + "\n" + names.map((name) => `            ${name}`).join("\n");
-            newUvl = newUvl.replace(uvl.split("\n")[index + 1], newLine);
+        if (line.includes(projectName) || line.includes("MainSPL")) {
+            if (uvl.split("\n")[index + 1].includes("mandatory")) {
+                let newLine = uvl.split("\n")[index + 1] + "\n" + names.map((name) => `            ${uvlFiles.filter((file) => file.name === name)[0].uvlName + "." + uvlFiles.filter((file) => file.name === name)[0].uvlModuleName
+                    }`).join("\n");
+                newUvl = newUvl.replace(uvl.split("\n")[index + 1], newLine);
+            }
         }
     });
 
@@ -194,6 +217,45 @@ async function changeUvlFile(names, { flags }) {
     }
 }
 
+
+async function findUvlFile(names, { flags }) {
+    let files = [];
+    names.forEach((name) => {
+        try {
+            const file = readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`).filter((file) => file.includes(".uvl"))
+            if (file.length === 0) {
+                console.log(`Error finding .uvl file in ${name} package`);
+                return;
+            }
+
+            // get the first file in the array
+            const uvlName = file[0].split(".")[0];
+            const uvl = readFileSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform${sep}${uvlName}.uvl`, "utf-8");
+            // find the module name in the uvl file, the next line after the "features" line is the module name
+            let uvlModuleName = null;
+
+            uvl.split("\n").filter((line, index) => {
+                if (line.includes("features")) {
+                    const moduleLine = uvl.split("\n")[index + 1];
+                    // clean the line from any spaces, \t, \n or \r
+                    uvlModuleName = moduleLine.replace(/\s/g, "");
+                }
+            });
+
+            files.push(
+                {
+                    name: name,
+                    uvlName: uvlName,
+                    uvlModuleName: uvlModuleName
+                }
+            );
+        } catch (e) {
+            console.log(`Error reading files from ${name} package: ${e.message}`);
+            return;
+        }
+    });
+    return files;
+}
 
 
 
