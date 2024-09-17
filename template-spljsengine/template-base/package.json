@@ -8,14 +8,22 @@
   "bin": {
     "main-app-act": "cli/index.js"
   },
+  "scripts": {
+    "dev": "cd client && vite",
+    "build": "cd client && vite build",
+    "preview": "cd client && vite preview"
+  },
   "dependencies": {
     "kleur": "^4.1.5",
     "kolorist": "1.8.0",
     "spl-js-engine": "git+https://gitlab.lbd.org.es/modularspl/new-modular-spl-js-engine.git",
     "yargs-parser": "^20.2.9",
-    "main-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git"
+    "main-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git",
+    "vue": "^3.4.37"
   },
   "devDependencies": {
-    "del-cli": "^3.0.1"
+    "@vitejs/plugin-vue": "^5.1.2",
+    "del-cli": "^3.0.1",
+    "vite": "^5.4.1"
   }
 }
