@@ -2,6 +2,8 @@ import { bold, green, red, yellow } from "kleur/colors";
 import { readFileSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 import { sep } from "path";
+import { findUvlFile } from "../utils.js";
+import path from "path";
 
 /**
  * Remove modules from the package.json file, the base.uvl file and uninstall them.
@@ -13,8 +15,10 @@ async function remove(packages, { flags }) {
 
     console.log(`${bold('Deleting modules:')} ${green(packages.join(", "))}\n`);
 
+    const uvlFiles = await findUvlFile(packages, { flags }, { flags });
+
     try {
-        await removeModulesFromBaseUvl(packages);
+        await removeModulesFromBaseUvl(uvlFiles.map(uvl => uvl.uvlName));
     } catch (e) {
         console.error(red(`Error deleting modules from base.uvl file: ${e.message}`));
         return;
@@ -27,9 +31,14 @@ async function remove(packages, { flags }) {
         return;
     }
 
+    try {
+        await removeSplModulesFile(uvlFiles);
+    } catch (e) {
+        console.error(red(`Error deleting modules: ${e.message}`));
+        return
+    }
+
     console.log(`\n${green('Modules deleted successfully!')}`);
-
-
 }
 
 async function removeModulesFromBaseUvl(packages) {
@@ -94,9 +103,19 @@ async function removePackageJsonDependencies(packages) {
     }
 }
 
+async function removeSplModulesFile(uvlFiles) {
+    const splModulesPath = path.join(process.cwd(), "splModules.json");
 
+    try {
+        const splModules = JSON.parse(readFileSync(splModulesPath, "utf-8"));
+        const newSplModules = splModules.filter(splModule => !uvlFiles.some(uvl => uvl.uvlName === splModule.name));
 
-
+        writeFileSync(splModulesPath, JSON.stringify(newSplModules, null, 2));
+    } catch (e) {
+        console.error(red(`Error deleting modules from spl_modules.json file: ${e.message}`));
+        return;
+    }
+}
 
 export { remove };
 

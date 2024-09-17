@@ -2,6 +2,7 @@ import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
 import { readFileSync, writeFileSync, readdirSync } from "fs";
 import { execSync } from "child_process";
 import path, { sep } from "path";
+import { findUvlFile } from "../utils.js";
 
 /**
  * Function that adds dependency to the project
@@ -248,49 +249,6 @@ async function changeSplJsEngine(names, { flags }) {
         return;
     }
 }
-
-
-
-async function findUvlFile(names, { flags }) {
-    let files = [];
-    names.forEach((name) => {
-        try {
-            const file = readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`).filter((file) => file.includes(".uvl"))
-            if (file.length === 0) {
-                console.log(`Error finding .uvl file in ${name} package`);
-                return;
-            }
-
-            // get the first file in the array
-            const uvlName = file[0].split(".")[0];
-            const uvl = readFileSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform${sep}${uvlName}.uvl`, "utf-8");
-            // find the module name in the uvl file, the next line after the "features" line is the module name
-            let uvlModuleName = null;
-
-            uvl.split("\n").filter((line, index) => {
-                if (line.includes("features")) {
-                    const moduleLine = uvl.split("\n")[index + 1];
-                    // clean the line from any spaces, \t, \n or \r
-                    uvlModuleName = moduleLine.replace(/\s/g, "");
-                }
-            });
-
-            files.push(
-                {
-                    name: name,
-                    uvlName: uvlName,
-                    uvlModuleName: uvlModuleName
-                }
-            );
-        } catch (e) {
-            console.log(`Error reading files from ${name} package: ${e.message}`);
-            return;
-        }
-    });
-    return files;
-}
-
-
 
 export {
     addDependency,
