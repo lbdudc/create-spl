@@ -2,7 +2,6 @@ import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
 import { readFileSync, writeFileSync, readdirSync } from "fs";
 import { execSync } from "child_process";
 import path, { sep } from "path";
-import vm from "vm";
 
 /**
  * Function that adds dependency to the project
@@ -218,23 +217,34 @@ async function changeUvlFile(names, { flags }) {
 
 async function changeSplJsEngine(names, { flags }) {
 
-    console.log(`\n${cyan("Changing")} ${bold("splConfig.js")} ${dim("file")}`);
+    console.log(`\n${cyan("Changing")} ${bold("splModules.json")} ${dim("file")}`);
 
     const uvlFiles = await findUvlFile(names, { flags });
 
+    if (uvlFiles.length === 0) {
+        console.log("Error finding .uvl files in the packages");
+        return;
+    }
+
     try {
-        const splConfig = path.join(process.cwd(), 'src', 'splConfig.js');
-        let splConfigContent = readFileSync(splConfig, "utf-8");
+        const splModulesPath = path.join(process.cwd(), 'splModules.json');
+        let modules = readFileSync(splModulesPath, "utf-8");
+        modules = JSON.parse(modules);
 
-        // find the modules variable and add the new modules to it
+        uvlFiles.forEach((uvl) => {
+            let module = {
+                name: uvl.uvlName,
+                nameProject: uvl.name
+            };
+            modules.push(module);
+        });
 
-        splConfigContent = splConfigContent.replace(splModulesConfig, newSplModulesConfig);
+        writeFileSync(splModulesPath, JSON.stringify(modules, null, 2));
 
-        // write the file
-
+        console.log(`\n${green("splModules.json file changed successfully!")}`);
     }
     catch (e) {
-        console.log(`Error reading splConfig.js file: ${e.message}`);
+        console.log(`Error reading splModules.json file: ${e.message}`);
         return;
     }
 }
