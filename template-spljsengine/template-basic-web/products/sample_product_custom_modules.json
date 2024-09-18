@@ -1,0 +1,22 @@
+{
+  "basicData": {
+    "name": "User Management",
+    "version": "0.1.0",
+    "database": {}
+  },
+  "modules": {
+    "main-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git#2-test-add-new-functionalities",
+    "map-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/map-component.git",
+    "other-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/other-component.git"
+  },
+  "dataModel": {
+    "cells": []
+  },
+  "features": [
+    "GraphicalUserInterface",
+    "GUI_Menu",
+    "GUI_M_Top",
+    "Tools",
+    "T_MailSender"
+  ]
+}
