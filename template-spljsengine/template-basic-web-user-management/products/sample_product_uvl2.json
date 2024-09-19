@@ -1,0 +1,18 @@
+{
+  "basicData": {
+    "name": "User Management",
+    "version": "0.1.0",
+    "database": {}
+  },
+  "dataModel": {
+    "cells": []
+  },
+  "features": [
+    "GraphicalUserInterface",
+    "GUI_Menu",
+    "GUI_M_Top",
+    "Tools",
+    "T_MailSender",
+    "UM_UserCRUD"
+  ]
+}

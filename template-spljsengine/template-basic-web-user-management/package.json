@@ -12,6 +12,7 @@
         "kolorist": "1.8.0",
         "spl-js-engine": "git+https://gitlab.lbd.org.es/modularspl/new-modular-spl-js-engine.git",
         "yargs-parser": "^20.2.9",
-        "main-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git"
+        "main-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git",
+        "user-management-component": "git+https://gitlab.lbd.org.es/modularspl/spl-modules/user-management-component.git"
     }
 }

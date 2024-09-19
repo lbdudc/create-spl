@@ -1,5 +1,5 @@
-import { createEngine } from "./src/derivationEngine";
+import { createEngine, readJsonFromFile } from "./src/derivationEngine";
 
-const engine = await createEngine();
-
-export default engine;
+export {
+  createEngine, readJsonFromFile
+}

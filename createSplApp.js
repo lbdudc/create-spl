@@ -36,8 +36,7 @@ Options:
 Available templates:
 ${yellow('basic-web')}
 ${green('basic-web-with-mapviewer')}
-${cyan('basic-backend')}
-${magenta('basic-web-traffic-analyzer')}`
+${cyan('basic-web-with-user-management')}`
 
 const FRAMEWORKS = [
     {
@@ -51,19 +50,14 @@ const FRAMEWORKS = [
                 color: yellow,
             },
             {
-                name: 'basic-web-mapviewer',
-                display: 'basic-web-with-mapviewer ↗',
-                color: green,
-            },
-            {
-                name: 'basic-backend',
-                display: 'basic-backend ↗',
+                name: 'basic-web-user-management',
+                display: 'basic-web-with-user-management ↗',
                 color: cyan,
             },
             {
-                name: 'basic-web-traffic-analyzer',
-                display: 'basic-web-traffic-analyzer ↗',
-                color: magenta,
+                name: 'basic-web-mapviewer',
+                display: 'basic-web-with-mapviewer ↗',
+                color: green,
             },
         ],
     },

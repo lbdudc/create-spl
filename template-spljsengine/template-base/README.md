@@ -40,3 +40,13 @@ This will add this changes for you:
 - Add a new dependency to the `package.json` file.
 - Add a new import statement and mandatory configuration to the `base.uvl` file.
 - Add the plugin to the spl-js-engine plugins file.
+
+### Generate product
+
+To generate a product, you need to run the following command:
+
+```bash
+npx main-app-act generate <spec.json route> <output-folder>
+```
+
+This will generate a product using the derivation engine. The product will be saved in the `products` folder.

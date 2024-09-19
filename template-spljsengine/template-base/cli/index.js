@@ -83,11 +83,16 @@ async function runCommand(cmd, flags) {
             return;
         }
         case "generate": {
-            const { createEngine, readJsonFromFile } = await import("./generate/index.js");
-            const engine = await createEngine();
+            const { createProduct } = await import("./generate/index.js");
+            const productPath = flags._[3];
+            if (!productPath) {
+                console.error(red("Error: generate command requires a product path as argument."));
+                return;
+            }
 
-            engine.generateProduct("output", readJsonFromFile("spec.json"));
+            const outputFolder = flags._[4] || "output";
 
+            createProduct(productPath, outputFolder);
             return;
         }
     }

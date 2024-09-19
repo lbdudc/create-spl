@@ -1,0 +1,15 @@
+[
+    {
+        "name": "main_component",
+        "nameProject": "main-component",
+        "main": true
+    },
+    {
+        "name": "user_management_component",
+        "nameProject": "user-management-component"
+    },
+    {
+        "name": "map_viewer_component",
+        "nameProject": "map-viewer-component"
+    }
+]
