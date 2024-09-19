@@ -11,12 +11,14 @@ if (!featureModel.endsWith("uvl")) {
     featureModel = readFile(featureModel)
 }
 
+const mainComponent = splModulesConfig.find(component => component.isMain);
+
 const createEngine = new DerivationEngine({
     codePath: null,
     featureModel: featureModel,
-    config: readJsonFromFile(`.${sep}src${sep}platform${sep}config.json`),
-    extraJS: readFile(`.${sep}src${sep}platform${sep}extra.js`),
-    modelTransformation: readFile(`.${sep}src${sep}platform${sep}transformation.js`),
+    config: readJsonFromFile(mainComponent.config),
+    extraJS: readFile(mainComponent.path + `${sep}extra.js`),
+    modelTransformation: readFile(mainComponent.path + `${sep}transformation.js`),
     verbose: VERBOSE,
     components: splModulesConfig
 });

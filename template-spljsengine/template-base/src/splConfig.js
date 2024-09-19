@@ -22,6 +22,7 @@ export const splModulesConfig =
             codePath: comp.codePath,
             featureModel: comp.featureModel,
             config: comp.config,
+            path: comp.path,
             isMain: component.main || false
         }
     })

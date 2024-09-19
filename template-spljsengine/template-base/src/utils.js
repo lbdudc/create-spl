@@ -11,5 +11,6 @@ export function findInNodeModules(route, component) {
         codePath: mainPath + `${sep}code`,
         featureModel: mainPath + `${sep}${name}.uvl`,
         config: mainPath + `${sep}config.json`,
+        path: mainPath
     }
 }
