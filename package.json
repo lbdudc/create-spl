@@ -1,6 +1,6 @@
 {
   "name": "create-spl",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "homepage": "https://github.com/lbdudc/create-spl#readme",
   "repository": {
     "type": "git",
@@ -22,11 +22,11 @@
     "test": "cross-env FORCE_COLOR=true jest"
   },
   "dependencies": {
-    "cross-spawn": "^7.0.3",
+    "cross-spawn": "^7.0.6",
     "kolorist": "^1.8.0",
     "minimist": "^1.2.8",
     "prompts": "^2.4.2",
-    "semver": "^7.3.5"
+    "semver": "^7.7.1"
   },
   "author": {
     "name": "Victor Lamas",
