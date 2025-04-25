@@ -1,16 +1,18 @@
-import fs, { readFileSync } from 'node:fs'
+import { formatTargetDir, copy, isValidPackageName, toValidPackageName, isEmpty, emptyDir, pkgFromUserAgent } from './utils/utils.js'
+import { TEMPLATES } from './utils/consts.js'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import spawn from 'cross-spawn'
 import minimist from 'minimist'
 import prompts from 'prompts'
 import {
-    bold,
     cyan,
     green,
-    magenta,
     red,
     reset,
+    magenta,
+    blue,
     yellow,
 } from 'kolorist'
 
@@ -34,58 +36,11 @@ Options:
   -h, --help                 display this help message
 
 Available templates:
-${yellow('basic-web')}
-${green('basic-web-with-mapviewer')}
-${cyan('basic-web-with-user-management')}`
-
-const FRAMEWORKS = [
-    {
-        name: 'spljsengine',
-        display: 'spl-js-engine',
-        color: yellow,
-        variants: [
-            {
-                name: 'basic-web',
-                display: 'basic-web ↗',
-                color: yellow,
-            },
-            {
-                name: 'basic-web-user-management',
-                display: 'basic-web-with-user-management ↗',
-                color: cyan,
-            },
-            {
-                name: 'basic-web-mapviewer',
-                display: 'basic-web-with-mapviewer ↗',
-                color: green,
-            },
-        ],
-    },
-    {
-        name: 'others',
-        display: 'Others',
-        color: reset,
-        variants: [
-            {
-                name: 'create-other-spl',
-                display: 'create-other-extra ↗',
-                color: reset,
-                customCommand: '',
-            },
-            {
-                name: 'create-other-spl-more',
-                display: 'create-other-spl-more ↗',
-                color: reset,
-                customCommand: '',
-            },
-        ],
-    },
-];
-
-
-const TEMPLATES = FRAMEWORKS.map(
-    f => (f.variants && f.variants.map(v => v.name)) || [f.name]
-).reduce((a, b) => a.concat(b), [])
+${yellow('base')}
+${magenta('web-calculator')}
+${blue('basic-web')}
+${green('basic-web-mapviewer')}
+${cyan('basic-web-user-management')}`
 
 const renameFiles = {
     _gitignore: ".gitignore"
@@ -168,37 +123,26 @@ async function init() {
                         isValidPackageName(dir) || "Invalid package.json name"
                 },
                 {
-                    type:
-                        argTemplate && TEMPLATES.includes(argTemplate) ? null : "select",
-                    name: "framework",
-                    message:
-                        typeof argTemplate === "string" && !TEMPLATES.includes(argTemplate)
-                            ? reset(
-                                `"${argTemplate}" isn't a valid template. Please choose from below: `
-                            )
-                            : reset("Select a derivation engine:"),
+                    type: "select",
+                    name: 'analysisTools',
+                    message: reset('Do you want to include analysis tools (flamapy.js)?'),
+                    choices: [
+                        { title: 'Yes', value: true },
+                        { title: 'No', value: false },
+                    ],
                     initial: 0,
-                    choices: FRAMEWORKS.map(framework => {
-                        const frameworkColor = framework.color
-                        return {
-                            title: frameworkColor(framework.display || framework.name),
-                            value: framework
-                        }
-                    })
                 },
                 {
-                    type: framework =>
-                        framework && framework.variants ? "select" : null,
-                    name: "variant",
-                    message: reset("Select a derivation engine:"),
-                    choices: framework =>
-                        framework.variants.map(variant => {
-                            const variantColor = variant.color
-                            return {
-                                title: variantColor(variant.display || variant.name),
-                                value: variant.name
-                            }
-                        })
+                    type: "select",
+                    name: "template",
+                    message: reset("Select a template:"),
+                    choices: TEMPLATES.map(template => {
+                        const templateColor = template.color
+                        return {
+                            title: templateColor(template.display || template.name),
+                            value: template
+                        }
+                    })
                 }
             ],
             {
@@ -213,7 +157,7 @@ async function init() {
     }
 
     // user choice associated with prompts
-    const { framework, overwrite, packageName, variant } = result
+    const { overwrite, packageName, template, analysisTools } = result
 
     const root = path.join(cwd, targetDir)
 
@@ -224,7 +168,7 @@ async function init() {
     }
 
     // determine template
-    let template = variant || framework?.name || argTemplate
+    let calcTemplate = template || argTemplate || "base"
 
     const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
     const pkgManager = pkgInfo ? pkgInfo.name : "npm"
@@ -232,7 +176,7 @@ async function init() {
         ;
 
     const { customCommand } =
-        FRAMEWORKS.flatMap(f => f.variants).find(v => v.name === template) ?? {}
+        TEMPLATES.find(v => v.name === template) ?? {}
 
     if (customCommand) {
         const fullCustomCommand = customCommand
@@ -273,29 +217,12 @@ async function init() {
         process.exit(status ?? 0)
     }
 
-    let calcFramework = framework;
-
-    if (argTemplate) {
-        // find the framework that the template belongs to
-        calcFramework = FRAMEWORKS.find(f =>
-            f.variants?.map(v => v.name).includes(template)
-        )
-    }
-
     // First add the template from the engine
     const engineTemplateDir = path.resolve(
         fileURLToPath(import.meta.url),
         "..",
-        `template-${framework?.name || calcFramework.name}`,
+        "templates",
         "template-base"
-    )
-
-    // Then add the template from the framework
-    const templateDir = path.resolve(
-        fileURLToPath(import.meta.url),
-        "..",
-        `template-${framework?.name || calcFramework.name}`,
-        `template-${template}`
     )
 
     let write = (file, content) => {
@@ -308,26 +235,44 @@ async function init() {
     }
 
     const engineFiles = fs.readdirSync(engineTemplateDir)
-    for (const file of engineFiles.filter(f => f !== "package.json")) {
+    for (const file of engineFiles) {
         write(file)
     }
 
-    write = (file, content) => {
-        const targetPath = path.join(root, renameFiles[file] ?? file)
-        if (content) {
-            fs.writeFileSync(targetPath, content)
-        } else {
-            copy(path.join(templateDir, file), targetPath)
+    // Then add the template from the framework
+    const templateDir = path.resolve(
+        fileURLToPath(import.meta.url),
+        "..",
+        "templates",
+        `template-${calcTemplate?.name}`
+    )
+
+    // if the template is not base, we need to copy the template files from the engine
+    if (calcTemplate.name !== "base") {
+        write = (file, content) => {
+            const targetPath = path.join(root, renameFiles[file] ?? file)
+            if (content) {
+                fs.writeFileSync(targetPath, content)
+            } else {
+                copy(path.join(templateDir, file), targetPath)
+            }
+        }
+
+        const templateFiles = fs.readdirSync(templateDir)
+        for (const file of templateFiles) {
+            write(file)
         }
     }
 
-    const templateFiles = fs.readdirSync(templateDir)
-    for (const file of templateFiles) {
-        write(file)
-    }
+    //TODO: check if the spltools option is checked, and add the spltools files
+    // if (spltools) {
+    // }
+
+    // if the template is base, we need to copy the template files from the engine
+    const calcTemplateDir = calcTemplate?.name !== "base" ? templateDir : engineTemplateDir
 
     const pkg = JSON.parse(
-        fs.readFileSync(path.join(templateDir, `package.json`), "utf-8")
+        fs.readFileSync(path.join(calcTemplateDir, `package.json`), "utf-8")
     )
 
     pkg.name = packageName || getProjectName()
@@ -335,7 +280,7 @@ async function init() {
 
     write("package.json", JSON.stringify(pkg, null, 2) + "\n")
 
-    const uvl = fs.readFileSync(path.join(templateDir, `base.uvl`), "utf-8")
+    const uvl = fs.readFileSync(path.join(calcTemplateDir, `base.uvl`), "utf-8")
     write("base.uvl", uvl.replace("<spl-name>", pkg.name))
 
     const cdProjectName = path.relative(cwd, root)
@@ -353,75 +298,10 @@ async function init() {
             break
         default:
             console.log(`  ${pkgManager} install`)
-            console.log(`  npx ${pkg.name} generate <product-route>`)
+            console.log(`  npx ${packageName} generate <product-route>`)
             break
     }
     console.log()
-}
-
-
-function formatTargetDir(targetDir) {
-    return targetDir?.trim().replace(/\/+$/g, "")
-}
-
-function copy(src, dest) {
-    const stat = fs.statSync(src)
-    if (stat.isDirectory()) {
-        copyDir(src, dest)
-    } else {
-        fs.copyFileSync(src, dest)
-    }
-}
-
-function isValidPackageName(projectName) {
-    return /^(?:@[a-z\d\-*~][a-z\d\-*._~]*\/)?[a-z\d\-~][a-z\d\-._~]*$/.test(
-        projectName
-    )
-}
-
-function toValidPackageName(projectName) {
-    return projectName
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/^[._]/, "")
-        .replace(/[^a-z\d\-~]+/g, "-")
-}
-
-function copyDir(srcDir, destDir) {
-    fs.mkdirSync(destDir, { recursive: true })
-    for (const file of fs.readdirSync(srcDir)) {
-        const srcFile = path.resolve(srcDir, file)
-        const destFile = path.resolve(destDir, file)
-        copy(srcFile, destFile)
-    }
-}
-
-function isEmpty(path) {
-    const files = fs.readdirSync(path)
-    return files.length === 0 || (files.length === 1 && files[0] === ".git")
-}
-
-function emptyDir(dir) {
-    if (!fs.existsSync(dir)) {
-        return
-    }
-    for (const file of fs.readdirSync(dir)) {
-        if (file === ".git") {
-            continue
-        }
-        fs.rmSync(path.resolve(dir, file), { recursive: true, force: true })
-    }
-}
-
-function pkgFromUserAgent(userAgent) {
-    if (!userAgent) return undefined
-    const pkgSpec = userAgent.split(" ")[0]
-    const pkgSpecArr = pkgSpec.split("/")
-    return {
-        name: pkgSpecArr[0],
-        version: pkgSpecArr[1]
-    }
 }
 
 init().catch(err => {
