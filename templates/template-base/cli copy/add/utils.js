@@ -61,7 +61,7 @@ async function rollBackAddDependency(name) {
 
     // uninstall the packages via npm uninstall and show the output in the console in real time
     try {
-        const child = execSync(`npm uninstall ${name}`, { stdio: "inherit" });
+        const child = execSync(`npm uninstall ${names.join(" ")}`, { stdio: "inherit" });
     } catch (e) {
         console.log(`Error uninstalling packages: ${e.message}`);
         return;

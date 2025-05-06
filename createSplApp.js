@@ -280,8 +280,8 @@ async function init() {
 
     write("package.json", JSON.stringify(pkg, null, 2) + "\n")
 
-    const uvl = fs.readFileSync(path.join(calcTemplateDir, `base.uvl`), "utf-8")
-    write("base.uvl", uvl.replace("<spl-name>", pkg.name))
+    const uvl = fs.readFileSync(path.join(calcTemplateDir, `model.uvl`), "utf-8")
+    write("model.uvl", uvl.replace("<spl-name>", pkg.name))
 
     const cdProjectName = path.relative(cwd, root)
     console.log(`\nDone. Now run:\n`)

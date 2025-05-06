@@ -62,8 +62,19 @@ async function runCommand(cmd, flags) {
     switch (cmd) {
         case "add": {
             const { add } = await import("./add/index.js");
-            const packages = flags._.slice(3);
-            await add(packages, { flags });
+            // get only the first 2 arguments after the command name
+            // check if the first argument is a package name and the second is the url
+            // if not, throw an error
+            if (flags._.length < 4) {
+                console.error(red("Error: add command should be: add <module-name> <module-url>"));
+                return;
+            }
+            const modulePackage = {
+                name: flags._[3],
+                url: flags._[4],
+            }
+
+            await add(modulePackage, { flags });
             return;
         }
         case "modify": {
