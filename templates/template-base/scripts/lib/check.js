@@ -34,8 +34,8 @@ export const modifyDependenciesToPackageJon = (packageJson, dependency) => {
     return json
 }
 
-export const modifyUvlFeatures = async (uvl, [], uvlFile, projectName) => {
-    if (uvl == null) {
+export const modifyUvlFeatures = async (uvlFile, module, projectName) => {
+    if (uvlFile == null) {
         console.log("Error reading base.uvl file");
         return;
     }
@@ -47,7 +47,7 @@ export const modifyUvlFeatures = async (uvl, [], uvlFile, projectName) => {
         // if line includes "features" in the next line, then insert the names in the next line
         if (uvlFile.split("\n")[index + 1] && uvlFile.split("\n")[index + 1].includes("features")) {
             // insert it before the features line
-            let newLine = line + "\n" + uvlFile.name + " from " + uvlFile.url;
+            let newLine = line + "\n\t" + module.name + " from " + module.url;
             newUvl = newUvl.replace(line, newLine);
         }
 
@@ -55,7 +55,7 @@ export const modifyUvlFeatures = async (uvl, [], uvlFile, projectName) => {
         // then insert the names in the next line after the mandatory key
         if (line.includes(projectName) || line.includes("MainSPL")) {
             if (uvlFile.split("\n")[index + 1].includes("mandatory")) {
-                let newLine = uvlFile.split("\n")[index + 1] + "\n" + uvlFile.name
+                let newLine = uvlFile.split("\n")[index + 1] + "\n\t\t" + module.name
                 newUvl = newUvl.replace(uvlFile.split("\n")[index + 1], newLine);
             }
         }

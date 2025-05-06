@@ -134,11 +134,7 @@ async function changeUvlFile(module, { flags }) {
     let uvl = null;
     uvl = readFileSync(path.join(process.cwd(), FM_FILENAME), "utf-8");
 
-    // find a .uvl file in the node_modules folder
-    const uvlFile = await findUvlFile(module, { flags });
-
-    const newUvl = await modifyUvlFeatures(uvl, module, uvlFile, projectName, { flags });
-    console.log(newUvl);
+    const newUvl = await modifyUvlFeatures(uvl, module, projectName, { flags });
 
     try {
         writeFileSync(path.join(process.cwd(), FM_FILENAME), newUvl);
