@@ -1,4 +1,4 @@
-import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
+import { bold, green, magenta, red } from "kleur/colors";
 import { addDependency, changeUvlFile, checkSPLPackage, rollBackAddDependency, changeSplJsEngine } from "./utils.js";
 
 async function add(names, { flags }) {
@@ -24,10 +24,11 @@ async function add(names, { flags }) {
     }
 
     // Change the UVL file
-    console.log(`\n${bold('Changing')} ${green('base.uvl')} ${bold('file, adding ')}[${(magenta(names.join(', ')))}]'`);
+    console.log(`${bold('Changing')} ${green('base.uvl')} ${bold('file, adding ')}[${(magenta(names.join(', ')))}]'`);
     await changeUvlFile(packages.filter((p) => p.valid).map((p) => p.name), { flags });
 
-    // // change the spl-js-engine file to include the new package
+    // change the spl-js-engine file to include the new package
+    console.log(`${bold('Changing')} ${green('modules.json')} ${bold('file, adding ')}[${(magenta(names.join(', ')))}]`);
     await changeSplJsEngine(packages.filter((p) => p.valid).map((p) => p.name), { flags });
 }
 

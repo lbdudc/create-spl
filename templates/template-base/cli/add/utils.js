@@ -1,8 +1,10 @@
-import { bold, cyan, dim, green, magenta, red, yellow } from "kleur/colors";
+import { bold, cyan, dim, green, magenta, yellow, red } from "kleur/colors";
 import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { modifyDependenciesToPackageJon } from "../../scripts/index.js";
 import { execSync } from "child_process";
 import path, { sep } from "path";
 import { findUvlFile } from "../utils.js";
+import { modifyComponentsJsonFile, modifyUvlFeatures } from "../../scripts/lib/check.js";
 
 /**
  * Function that adds dependency to the project
@@ -16,37 +18,12 @@ async function addDependency(names) {
     // add the packages to the package.json file
     try {
         const pckg = readFileSync(process.cwd() + sep + "package.json", "utf-8");
-        const json = JSON.parse(pckg);
+        const json = modifyDependenciesToPackageJon(JSON.parse(pckg), names);
 
-        names.forEach((name) => {
-            // if the package is already in the dependencies, skip it
-            if (json.dependencies[name]) {
-                return;
-            }
-
-            // if its a local package, add the path to the package.json file
-            if (name.startsWith("file:")) {
-                json.dependencies[name.split(path.sep).pop()] = name;
-                return;
-            }
-
-            // if its a git repository, add the git url to the package.json file
-            // delete the .git extension
-            if (name.startsWith("git+")) {
-                const gitUrl = name.split("git+")[1];
-                json.dependencies[gitUrl.split("/").pop().split(".git")[0]] = name;
-                return;
-            }
-
-            // if it has a version, add it to the package.json file
-            if (name.includes(":")) {
-                json.dependencies[name.split(":")[0]] = name.split(":")[1];
-                return;
-            }
-
-            // if it has no version, add it to the package.json file
-            json.dependencies[name] = "*";
-        });
+        if (!json) {
+            console.log("Error modifying package.json file");
+            return;
+        }
 
         writeFileSync(process.cwd() + sep + "package.json", JSON.stringify(json, null, 2));
     } catch (e) {
@@ -115,12 +92,9 @@ async function checkSPLPackage(names, { flags }) {
             name = name.split(":")[0];
         }
 
-        console.log(`\n${cyan("Checking")} ${bold(name)} ${dim("package")}`);
-        console.log(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`);
+        console.log(`\n${cyan("Checking")} ${bold(name)} ${dim("module")}`);
 
-
-        readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform`).forEach((file) => {
-            console.log(`  ${magenta("Found")} ${bold(file)}`);
+        readdirSync(process.cwd() + `${sep}node_modules${sep}${name}`).forEach((file) => {
             // if the file is in the files array, remove it from the array
             if (files.includes(file) || files.includes(file.split(".")[1])) {
                 files = files.filter((f) => f !== file);
@@ -128,14 +102,13 @@ async function checkSPLPackage(names, { flags }) {
 
             // check if at least one of the files is a.uvl file
             if (file.includes(".uvl")) {
-                console.log(`  ${green("Found")} ${bold(file)}`);
                 files = [];
             }
         });
 
         // check if there is a folder named "code"
         try {
-            readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}src${sep}platform${sep}code`);
+            readdirSync(process.cwd() + `${sep}node_modules${sep}${name}${sep}code`);
         } catch (e) {
             console.log(`\n${red('Missing code folder in')} ${bold(name)}`);
             validPackages[name] = false;
@@ -174,39 +147,9 @@ async function changeUvlFile(names, { flags }) {
     let uvl = null;
     uvl = readFileSync(process.cwd() + sep + "base.uvl", "utf-8");
 
-    if (uvl == null) {
-        console.log("Error reading base.uvl file");
-        return;
-    }
-
-    let newUvl = uvl;
-
     // find a .uvl file in the node_modules folder
     const uvlFiles = await findUvlFile(names, { flags });
-
-    uvl.split("\n").forEach((line, index) => {
-        // if it finds the features line, then insert the names before it
-        // if line includes "features" in the next line, then insert the names in the next line
-
-        if (uvl.split("\n")[index + 1] && uvl.split("\n")[index + 1].includes("features")) {
-            // insert it before the features line
-            let newLine = line + "\n" + names.map((name) =>
-                `    ${uvlFiles.filter((file) => file.name === name)[0].uvlName
-                }`).join("\n");
-            newUvl = newUvl.replace(line, newLine);
-        }
-
-        // if it finds the project name, and the next line has the "mandatory" key
-        // then insert the names in the next line after the mandatory key
-        if (line.includes(projectName) || line.includes("MainSPL")) {
-            if (uvl.split("\n")[index + 1].includes("mandatory")) {
-                let newLine = uvl.split("\n")[index + 1] + "\n" + names.map((name) => `            ${uvlFiles.filter((file) => file.name === name)[0].uvlName + "." + uvlFiles.filter((file) => file.name === name)[0].uvlModuleName
-                    }`).join("\n");
-                newUvl = newUvl.replace(uvl.split("\n")[index + 1], newLine);
-            }
-        }
-    });
-
+    const newUvl = await modifyUvlFeatures(uvl, names, uvlFiles, projectName, { flags });
 
     try {
         writeFileSync(process.cwd() + sep + "base.uvl", newUvl);
@@ -218,8 +161,6 @@ async function changeUvlFile(names, { flags }) {
 
 async function changeSplJsEngine(names, { flags }) {
 
-    console.log(`\n${cyan("Changing")} ${bold("splModules.json")} ${dim("file")}`);
-
     const uvlFiles = await findUvlFile(names, { flags });
 
     if (uvlFiles.length === 0) {
@@ -228,24 +169,17 @@ async function changeSplJsEngine(names, { flags }) {
     }
 
     try {
-        const splModulesPath = path.join(process.cwd(), 'splModules.json');
+        const splModulesPath = path.join(process.cwd(), 'modules.json');
         let modules = readFileSync(splModulesPath, "utf-8");
         modules = JSON.parse(modules);
 
-        uvlFiles.forEach((uvl) => {
-            let module = {
-                name: uvl.uvlName,
-                nameProject: uvl.name
-            };
-            modules.push(module);
-        });
+        const newModules = modifyComponentsJsonFile(uvlFiles, modules);
 
-        writeFileSync(splModulesPath, JSON.stringify(modules, null, 2));
+        writeFileSync(splModulesPath, JSON.stringify(newModules, null, 2));
 
-        console.log(`\n${green("splModules.json file changed successfully!")}`);
     }
     catch (e) {
-        console.log(`Error reading splModules.json file: ${e.message}`);
+        console.log(`Error reading modules.json file: ${e.message}`);
         return;
     }
 }

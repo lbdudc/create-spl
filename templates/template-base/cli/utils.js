@@ -74,7 +74,7 @@ async function findUvlFile(names, { flags }) {
     let files = [];
     names.forEach((name) => {
         try {
-            const filePath = path.join(process.cwd(), 'node_modules', name, 'src', 'platform');
+            const filePath = path.join(process.cwd(), 'node_modules', name);
             const file = readdirSync(filePath).filter((file) => file.includes(".uvl"))
             if (file.length === 0) {
                 console.log(`Error finding .uvl file in ${name} package`);

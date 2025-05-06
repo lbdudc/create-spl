@@ -298,7 +298,7 @@ async function init() {
             break
         default:
             console.log(`  ${pkgManager} install`)
-            console.log(`  npx ${packageName} generate <product-route>`)
+            console.log(`  npx ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName} generate <product-route>`)
             break
     }
     console.log()
