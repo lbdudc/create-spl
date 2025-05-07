@@ -119,14 +119,13 @@ async function init() {
                         isValidPackageName(dir) || "Invalid package.json name"
                 },
                 {
-                    type: "select",
-                    name: 'analysisTools',
-                    message: reset('Do you want to include analysis tools (flamapy.js)?'),
+                    type: "multiselect",
+                    name: "spltools",
+                    message: reset('Do you want to include some extra SPL tools ?'),
                     choices: [
-                        { title: 'Yes', value: true },
-                        { title: 'No', value: false },
+                        { title: "SPL Visual Interface", value: "spl-tools-webclient" },
+                        { title: "FM Analysis Tools (flamapy.js)", value: "spltools-flamapy" }
                     ],
-                    initial: 0,
                 },
                 {
                     type: "select",

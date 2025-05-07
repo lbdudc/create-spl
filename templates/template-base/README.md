@@ -1,52 +1,84 @@
 # Basic SPL Example
 
-This application runs spl-js-engine to execute a simple SPL program.
+This is a basic example of a Software Product Line (SPL) project. The project is designed to manage and generate products from a set of modules using a command-line interface (CLI).
+
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Usage](#usage)
+   - [Available Commands](#available-commands)
+3. [Extra Scripts](#extra-scripts)
+4. [Adding a Module](#adding-a-module)
+5. [Generating a Product](#generating-a-product)
+
+---
 
 ## Installation
+
+To install the dependencies and set up the project, run:
 
 ```bash
 npm install
 ```
 
+To sync all files and modules in the SPL, run the following command. This should be executed each time the `model.uvl` file is changed:
+
+```bash
+npm run build
+```
+
+---
+
 ## Usage
 
-A bunch of scripts can be executed in the spl:
+You can execute various scripts in the SPL using the following command:
 
 ```bash
 npx <spl-name> [options]
-
-options:
-   - add <module-name>
-   - change <module-name> <new-module>
-   - delete <module-name>
-   - generate <spec.jsont>
 ```
 
-- add: Adds a module to the current spl, handly if you want to quickly setup a new feature model. It can be a git url, a local directory or an npm package.
-- change: CHanges the location of the dependency of a module of the spl. It can be a git url, a local directory or an npm package.
-- delete: Deletes a submodule of the spl.
-- generate: Generates a product using the derivation engine. Needs a product specification.
+### Available Commands
 
-### Add module to the existing SPL program
+| Command                              | Description                                                                                     |
+|--------------------------------------|-------------------------------------------------------------------------------------------------|
+| `add <module-name> <module-url>`     | Adds a module to the SPL. The module can be a Git URL, local directory, or npm package.         |
+| `modify <module-name> <new-module-url>` | Changes the location of a module dependency. The new location can be a Git URL, local directory, or npm package. |
+| `delete <module-name>`               | Deletes a module from the SPL.                                                                 |
+| `generate <route/spec.json>`         | Generates a product using the derivation engine. Requires a product specification.             |
 
-It can be automatically added a spl module to the existing SPL program by running the following command:
+---
+
+## Extra Scripts
+
+| Script                  | Description                                                                                     |
+|-------------------------|-------------------------------------------------------------------------------------------------|
+| `npm run build`         | Builds the SPL project. Syncs all files and modules in the SPL. Should be executed after changes to `model.uvl`. |
+| `npm run check-validity`| Checks the validity of the SPL project. Ensures all modules are correctly imported.             |
+
+---
+
+## Adding a Module
+
+To add a module to the existing SPL program, run the following command:
 
 ```bash
-npx <spl-name> add <module-name>
+npx <spl-name> add <module-name> <module-url>
 ```
 
-This will add this changes for you:
+This will automatically:
 
-- Add a new dependency to the `package.json` file.
-- Add a new import statement and mandatory configuration to the `base.uvl` file.
-- Add the plugin to the spl-js-engine plugins file.
+- Add a new import statement to the `model.uvl` file.
 
-### Generate product
+---
 
-To generate a product, you need to run the following command:
+## Generating a Product
+
+To generate a product, run the following command:
 
 ```bash
 npx main-app-act generate <spec.json route> <output-folder>
 ```
 
-This will generate a product using the derivation engine. The product will be saved in the `products` folder.
+**Note:** Before running the `generate` command, ensure you run the `npm run build` command to reflect the latest changes.
+
+The generated product will be saved in the `products` folder.
