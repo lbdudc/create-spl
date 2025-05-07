@@ -7,6 +7,10 @@ import {
     green,
 } from "kleur/colors";
 
+/**
+ * Prints the help message for a command line interface (CLI) tool.
+ * @param {Object} info - The information to print in the help message. 
+ */
 export function printHelp({
     commandName,
     headline,

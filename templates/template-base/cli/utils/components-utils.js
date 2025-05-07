@@ -2,7 +2,11 @@ import { MODULES_FILENAME } from '../../src/consts/index.js';
 import { readFileSync } from "fs";
 import path from 'path';
 
-
+/**
+ * Function to find the alias of a module in the modules.json file.
+ * @param {String} module - The name of the module to find the alias for. 
+ * @returns {String|null} - The alias of the module if found, otherwise null.
+ */
 export const findAliasOfModule = (module) => {
     try {
         const modulesFile = readFileSync(

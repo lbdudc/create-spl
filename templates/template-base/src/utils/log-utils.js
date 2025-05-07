@@ -3,6 +3,11 @@ import kleur from 'kleur';
 import { MODULES_FILENAME } from '../consts/index.js';
 
 
+/**
+ * * Function to format the modules table for display in the console.
+ * @param {Array} modules - The array of module objects to be displayed. 
+ * @returns {String} - The formatted table as a string.
+ */
 function formatModulesTable(modules) {
     const headers = ['Module Name', 'URL'];
     const rows = modules.map(mod => [mod.name, mod.url]);
@@ -38,6 +43,12 @@ function formatModulesTable(modules) {
     return table.join('\n');
 }
 
+
+/**
+ * Function to print the modules table to the console.
+ * @param {String} title - The title of the table. 
+ * @param {Array} modules - The array of module objects to be displayed.
+ */
 export function printModules(title, modules) {
     console.log(`\n${kleur.bold(` - ${title}`)} ${kleur.green(MODULES_FILENAME)}:\n`);
     console.log(formatModulesTable(modules));
