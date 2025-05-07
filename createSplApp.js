@@ -7,11 +7,9 @@ import spawn from 'cross-spawn'
 import minimist from 'minimist'
 import prompts from 'prompts'
 import {
-    cyan,
     green,
     red,
     reset,
-    magenta,
     blue,
     yellow,
 } from 'kolorist'
@@ -37,10 +35,8 @@ Options:
 
 Available templates:
 ${yellow('base')}
-${magenta('web-calculator')}
 ${blue('basic-web')}
-${green('basic-web-mapviewer')}
-${cyan('basic-web-user-management')}`
+${green('basic-web-mapviewer')}`
 
 const renameFiles = {
     _gitignore: ".gitignore"

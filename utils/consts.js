@@ -7,27 +7,22 @@ import {
 export const TEMPLATES = [
     {
         name: 'base',
-        display: 'base',
+        display: 'Empty SPL project',
         color: green,
     },
     {
         name: 'web-calculator',
-        display: 'web-calculator',
+        display: 'web-calculator example (4 modules)',
         color: magenta,
     },
     {
         name: 'basic-web',
-        display: 'basic-web ↗',
-        color: yellow,
-    },
-    {
-        name: 'basic-web-user-management',
-        display: 'basic-web-with-user-management ↗',
+        display: 'basic-web example (1 module) ↗',
         color: yellow,
     },
     {
         name: 'basic-web-mapviewer',
-        display: 'basic-web-with-mapviewer ↗',
+        display: 'basic-web example with a map viewer (3 modules) ↗',
         color: yellow,
     },
 ]
