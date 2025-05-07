@@ -7,7 +7,9 @@
   "type": "module",
   "bin": {},
   "scripts": {
-    "build": "node ./scripts/build.js && npm install",
+    "build": "node ./scripts/build.js && npm install && npm run check-integrity",
+    "check-integrity": "node ./scripts/check-integrity.js",
+    "generate": "node ./scripts/generate.js",
     "client:dev": "cd client && vite",
     "client:build": "cd client && vite build",
     "client:preview": "cd client && vite preview"

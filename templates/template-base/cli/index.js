@@ -61,7 +61,7 @@ async function runCommand(cmd, flags) {
 
     switch (cmd) {
         case "add": {
-            const { add } = await import("./add/index.js");
+            const { add } = await import("./add.js");
             // get only the first 2 arguments after the command name
             // check if the first argument is a package name and the second is the url
             // if not, throw an error

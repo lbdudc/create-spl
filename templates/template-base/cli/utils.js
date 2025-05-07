@@ -1,21 +1,16 @@
 import path from "path";
-import { readdirSync, readFileSync } from "fs";
+import { readdirSync, readFileSync, writeFileSync } from "fs";
+import { modifyUvlFeatures } from "../src/utils/uvl-utils.js";
+import { PACKAGE_JSON_FILENAME, FM_FILENAME } from "../src/consts/index.js";
 
 import {
-    bgCyan,
     bgGreen,
-    bgRed,
     bgWhite,
-    bgYellow,
     black,
-    blue,
     bold,
     cyan,
     dim,
     green,
-    red,
-    underline,
-    yellow
 } from "kleur/colors";
 
 function printHelp({
@@ -104,7 +99,35 @@ async function findUvlFile(module, { flags }) {
     }
 }
 
+
+async function changeUvlFile(module, { flags }) {
+
+    let projectName = null;
+
+    const pckg = readFileSync(path.join(process.cwd(), PACKAGE_JSON_FILENAME), "utf-8");
+    projectName = JSON.parse(pckg).name;
+
+    if (projectName == null) {
+        console.log("Error reading package.json file");
+        return;
+    }
+
+    let uvl = null;
+    uvl = readFileSync(path.join(process.cwd(), FM_FILENAME), "utf-8");
+
+    const newUvl = await modifyUvlFeatures(uvl, module, projectName, { flags });
+
+    try {
+        writeFileSync(path.join(process.cwd(), FM_FILENAME), newUvl);
+    } catch (e) {
+        console.log("Error writing to model.uvl file");
+        return;
+    }
+}
+
+
 export {
     printHelp,
-    findUvlFile
+    findUvlFile,
+    changeUvlFile
 };

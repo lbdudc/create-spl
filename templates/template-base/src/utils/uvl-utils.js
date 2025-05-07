@@ -14,15 +14,9 @@ export const modifyUvlFeatures = async (uvlFile, module, projectName) => {
             // insert it before the features line
             let newLine = line + "\n\t" + module.name + " from " + module.url;
             newUvl = newUvl.replace(line, newLine);
-        }
 
-        // if it finds the project name, and the next line has the "mandatory" key
-        // then insert the names in the next line after the mandatory key
-        if (line.includes(projectName) || line.includes("MainSPL")) {
-            if (uvlFile.split("\n")[index + 1].includes("mandatory")) {
-                let newLine = uvlFile.split("\n")[index + 1] + "\n\t\t" + module.name
-                newUvl = newUvl.replace(uvlFile.split("\n")[index + 1], newLine);
-            }
+            console.log(`Updated line ${index + 1} in uvl file`);
+            console.log(newLine);
         }
     })
 
