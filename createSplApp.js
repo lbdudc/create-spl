@@ -272,7 +272,7 @@ async function init() {
     const calcTemplateDir = calcTemplate?.name !== "base" ? templateDir : engineTemplateDir
 
     const pkg = JSON.parse(
-        fs.readFileSync(path.join(calcTemplateDir, `package.json`), "utf-8")
+        fs.readFileSync(path.join(engineTemplateDir, `package.json`), "utf-8")
     )
 
     pkg.name = packageName || getProjectName()
@@ -298,6 +298,7 @@ async function init() {
             break
         default:
             console.log(`  ${pkgManager} install`)
+            console.log(`  ${pkgManager} run build`)
             console.log(`  npx ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName} generate <product-route>`)
             break
     }

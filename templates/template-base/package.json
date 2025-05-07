@@ -1,17 +1,16 @@
 {
-  "name": "main-app-act",
+  "name": "spl-project",
   "version": "0.1.0",
   "description": "A template for creating a new project using the SPL JS Engine",
   "main": "index.js",
   "private": true,
   "type": "module",
-  "bin": {
-    "main-app-act": "cli/index.js"
-  },
+  "bin": {},
   "scripts": {
-    "dev": "cd client && vite",
-    "build": "cd client && vite build",
-    "preview": "cd client && vite preview"
+    "build": "node ./scripts/build.js && npm install",
+    "client:dev": "cd client && vite",
+    "client:build": "cd client && vite build",
+    "client:preview": "cd client && vite preview"
   },
   "dependencies": {
     "cli-spinner": "^0.2.10",

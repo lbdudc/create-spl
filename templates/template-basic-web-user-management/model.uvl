@@ -1,6 +1,7 @@
 imports
-	main_component
-	user_management_component
+	main_component from git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git
+	user_management_component from git+https://gitlab.lbd.org.es/modularspl/spl-modules/map-viewer-component.git
+	
 features
 	MainSPL
 		mandatory

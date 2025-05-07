@@ -59,16 +59,7 @@ const buildSPL = () => {
     });
 
     // Update modules.json with imports
-    // keep always the first element of the components array
-    const mainComponent = modulesJson.find((mod) => mod.name === "main_component");
-
-    if (!mainComponent) {
-        console.error("Error: main_component not found in modules.json");
-        return;
-    }
-
     const newModulesJson = [];
-    newModulesJson.push(mainComponent);
 
     imports.forEach((imp) => {
         newModulesJson.push(imp);
@@ -84,7 +75,6 @@ const buildSPL = () => {
     } catch (e) {
         console.error("Error writing files", e);
     }
-
 
     console.log('\n' + cyan('SPL project built:'));
 
