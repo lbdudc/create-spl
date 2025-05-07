@@ -1,4 +1,5 @@
 import path from 'path';
+import { SPL_MODULE_CODE_FOLDER_NAME, FM_FILENAME, SPL_MODULE_CONFIG_FOLDER_NAME } from "../consts/index.js";
 
 
 /**
@@ -9,15 +10,15 @@ import path from 'path';
  */
 export function findInNodeModules(route, component) {
 
-    const { nameProject, name } = component;
+    const { name } = component;
     const sep = path.sep;
 
     // TODO: change this route templates for using path.join
-    const mainPath = route + `${nameProject}${sep}src${sep}platform`;
+    const mainPath = route + `${name}`;
     return {
-        codePath: mainPath + `${sep}code`,
-        featureModel: mainPath + `${sep}${name}.uvl`,
-        config: mainPath + `${sep}config.json`,
+        codePath: mainPath + `${sep}${SPL_MODULE_CODE_FOLDER_NAME}`,
+        featureModel: mainPath + `${sep}${FM_FILENAME}`,
+        config: mainPath + `${sep}${SPL_MODULE_CONFIG_FOLDER_NAME}`,
         path: mainPath
     }
 }

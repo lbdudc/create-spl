@@ -89,16 +89,11 @@ function getImports(fmUVL, deep = false) {
             name: "main_component",
             url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git",
             type: "git",
-            alias: "mc"
+            alias: "mc",
+            main: true,
         },
         {
-            name: "map_viewer",
-            url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/map-viewer-component.git",
-            type: "git",
-            alias: "mv"
-        },
-        {
-            name: "user_management",
+            name: "user_management_component",
             url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/user-management-component.git",
             type: "git",
         }
