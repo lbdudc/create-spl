@@ -62,9 +62,6 @@ async function runCommand(cmd, flags) {
     switch (cmd) {
         case "add": {
             const { add } = await import("./add.js");
-            // get only the first 2 arguments after the command name
-            // check if the first argument is a package name and the second is the url
-            // if not, throw an error
             if (flags._.length < 4) {
                 console.error(red("Error: add command should be: add <module-name> <module-url>"));
                 return;
@@ -78,13 +75,17 @@ async function runCommand(cmd, flags) {
             return;
         }
         case "modify": {
-            const { modify } = await import("./modify/index.js");
-            const packages = flags._.slice(3);
-            if (packages.length === 0 || packages.length !== 2) {
-                console.error(red("Error: modify command requires two package names as arguments."));
+            const { modify } = await import("./modify.js");
+            if (flags._.length < 4) {
+                console.error(red("Error: modify command should be: add <module-name> <new-module-url>"));
                 return;
             }
-            await modify(packages, { flags });
+            const modulePackage = {
+                name: flags._[3],
+                newUrl: flags._[4],
+            }
+
+            await modify(modulePackage, { flags });
             return;
         }
         case "remove": {
