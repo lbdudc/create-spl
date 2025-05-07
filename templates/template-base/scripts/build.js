@@ -86,6 +86,12 @@ const buildSPL = () => {
 function getImports(fmUVL, deep = false) {
     return [
         {
+            name: "main_component",
+            url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git",
+            type: "git",
+            alias: "mc"
+        },
+        {
             name: "map_viewer",
             url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/map-viewer-component.git",
             type: "git",

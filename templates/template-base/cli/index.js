@@ -10,7 +10,7 @@ const pck = readFileSync(process.cwd() + "/package.json", "utf8");
 const { name, version } = JSON.parse(pck);
 
 async function printHelp() {
-    const { printHelp } = await import("./utils.js");
+    const { printHelp } = await import("./utils/print-utils.js");
     printHelp({
         commandName: name,
         usage: "[command] [...flags]",
@@ -88,9 +88,9 @@ async function runCommand(cmd, flags) {
             return;
         }
         case "remove": {
-            const { remove } = await import("./remove/index.js");
-            const packages = flags._.slice(3);
-            await remove(packages, { flags });
+            const { remove } = await import("./remove.js");
+            const module = flags._[3]
+            await remove(module, { flags });
             return;
         }
         case "generate": {
