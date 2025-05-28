@@ -47,7 +47,7 @@ const checkSPLIntegrity = () => {
         let errorMessages = [];
 
         // Check if the module is valid
-        if (!module.name || !module.url) {
+        if (!module.name || !module.from) {
             error = true;
             errorMessages.push(`Name or URL is missing`);
         }

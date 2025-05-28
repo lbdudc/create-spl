@@ -9,8 +9,13 @@ import { MODULES_FILENAME } from '../consts/index.js';
  * @returns {String} - The formatted table as a string.
  */
 function formatModulesTable(modules) {
-    const headers = ['Module Name', 'URL'];
-    const rows = modules.map(mod => [mod.name, mod.url]);
+    const headers = ['Module Name', 'type', 'URL'];
+
+    const rows = modules.map(mod => [
+        mod.name ?? 'Unknown',
+        mod.type ?? 'N/A',
+        mod.from ?? 'N/A'
+    ]);
 
     // Calculate max column widths
     const colWidths = headers.map((_, i) =>
@@ -22,7 +27,7 @@ function formatModulesTable(modules) {
 
     const formatRow = (cols) =>
         '│ ' +
-        cols.map((col, i) => col.padEnd(colWidths[i], ' ')).join(' │ ') +
+        cols.map((col, i) => String(col ?? '').padEnd(colWidths[i], ' ')).join(' │ ') +
         ' │';
 
     const borderTop =
@@ -50,7 +55,7 @@ export function formatModulesTableWithErrors(modules) {
         mod.name,
         mod.isValid ? 'Yes' : 'No',
         mod.fmValid ? 'Yes' : 'No',
-        mod.errors.length > 0 ? mod.errors.join('\n') : 'None',
+        mod.errors.length > 0 ? mod.errors.join('\n') : '',
     ]);
 
     // Calculate max column widths

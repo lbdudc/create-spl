@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { PACKAGE_JSON_FILENAME, MODULES_FILENAME, FM_FILENAME } from '../src/consts/index.js';
 import { bold, green, cyan } from "kleur/colors";
 import { printModules } from '../src/utils/log-utils.js';
+import UVLFeatureModel from 'spl-js-engine/src/feature-model/feature-model-uvl.js';
 
 // This function lets you sync model.uvl with modules.json and package.json
 
@@ -47,21 +48,49 @@ const buildSPL = () => {
     console.log(` - Feature model: ${green(FM_FILENAME)} is valid`);
 
     // Get all imports from model.uvl
-    const imports = getImports(fmUVL, true);
+    const uvlFmImports = UVLFeatureModel.getUVLImports(fmUVL);
 
     // Update package.json with imports
-    modulesJson.forEach((mod) => {
+    uvlFmImports.forEach((mod) => {
         delete packageJson.dependencies[mod.name];
     });
 
-    imports.forEach((imp) => {
-        packageJson.dependencies[imp.name] = imp.url;
+    uvlFmImports.forEach((imp) => {
+
+        // if the import is "git:", change it to "git+"
+        if (imp.from.startsWith('git:')) {
+            imp.from = imp.from.replace('git:', 'git+');
+            imp.type = 'git';
+        }
+
+        // if the import starts with npm:, delete it
+        if (imp.from.startsWith('npm:')) {
+            imp.from = imp.from.replace('npm:', '');
+
+            const index = imp.from.indexOf(':');
+            if (index !== -1) {
+                imp.from = imp.from.substring(index + 1, imp.from.length);
+            }
+
+            imp.type = 'npm';
+        }
+
+        // if the import starts with file:, change it to file://
+        if (imp.from.startsWith('file:')) {
+            imp.from = imp.from.replace('file:', '');
+            imp.type = 'file';
+        }
+
+
+        imp.type = imp.type || 'file';
+
+        packageJson.dependencies[imp.name] = imp.from;
     });
 
     // Update modules.json with imports
     const newModulesJson = [];
 
-    imports.forEach((imp) => {
+    uvlFmImports.forEach((imp) => {
         newModulesJson.push(imp);
     });
 
@@ -80,24 +109,6 @@ const buildSPL = () => {
 
     printModules('Old', modulesJson);
     printModules('New', newModulesJson);
-}
-
-// TODO: change this to use uvljsparser
-function getImports(fmUVL, deep = false) {
-    return [
-        {
-            name: "main_component",
-            url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git",
-            type: "git",
-            alias: "mc",
-            main: true,
-        },
-        {
-            name: "user_management_component",
-            url: "git+https://gitlab.lbd.org.es/modularspl/spl-modules/user-management-component.git",
-            type: "git",
-        }
-    ];
 }
 
 
