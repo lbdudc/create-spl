@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
-import { findInNodeModules } from "./utils.js";
+import { findInNodeModules } from "./utils/node-modules-utils.js";
+import { MODULES_FILENAME } from "./consts/index.js";
 import path from "path";
 
 const MODULES_PATH = `.${path.sep}node_modules${path.sep}`;
@@ -7,7 +8,7 @@ const MODULES_PATH = `.${path.sep}node_modules${path.sep}`;
 let components = [];
 
 try {
-    const modulesFilePath = path.join(process.cwd(), "splModules.json");
+    const modulesFilePath = path.join(process.cwd(), MODULES_FILENAME);
     const modulesFile = readFileSync(modulesFilePath, "utf8");
     components = JSON.parse(modulesFile);
 } catch (error) {

@@ -7,11 +7,9 @@ import spawn from 'cross-spawn'
 import minimist from 'minimist'
 import prompts from 'prompts'
 import {
-    cyan,
     green,
     red,
     reset,
-    magenta,
     blue,
     yellow,
 } from 'kolorist'
@@ -37,10 +35,8 @@ Options:
 
 Available templates:
 ${yellow('base')}
-${magenta('web-calculator')}
 ${blue('basic-web')}
-${green('basic-web-mapviewer')}
-${cyan('basic-web-user-management')}`
+${green('basic-web-mapviewer')}`
 
 const renameFiles = {
     _gitignore: ".gitignore"
@@ -123,14 +119,13 @@ async function init() {
                         isValidPackageName(dir) || "Invalid package.json name"
                 },
                 {
-                    type: "select",
-                    name: 'analysisTools',
-                    message: reset('Do you want to include analysis tools (flamapy.js)?'),
+                    type: "multiselect",
+                    name: "spltools",
+                    message: reset('Do you want to include some extra SPL tools ?'),
                     choices: [
-                        { title: 'Yes', value: true },
-                        { title: 'No', value: false },
+                        { title: "SPL Visual Interface", value: "spl-tools-webclient" },
+                        { title: "FM Analysis Tools (flamapy.js)", value: "spltools-flamapy" }
                     ],
-                    initial: 0,
                 },
                 {
                     type: "select",
@@ -272,7 +267,7 @@ async function init() {
     const calcTemplateDir = calcTemplate?.name !== "base" ? templateDir : engineTemplateDir
 
     const pkg = JSON.parse(
-        fs.readFileSync(path.join(calcTemplateDir, `package.json`), "utf-8")
+        fs.readFileSync(path.join(engineTemplateDir, `package.json`), "utf-8")
     )
 
     pkg.name = packageName || getProjectName()
@@ -280,8 +275,8 @@ async function init() {
 
     write("package.json", JSON.stringify(pkg, null, 2) + "\n")
 
-    const uvl = fs.readFileSync(path.join(calcTemplateDir, `base.uvl`), "utf-8")
-    write("base.uvl", uvl.replace("<spl-name>", pkg.name))
+    const uvl = fs.readFileSync(path.join(calcTemplateDir, `model.uvl`), "utf-8")
+    write("model.uvl", uvl.replace("<spl-name>", pkg.name))
 
     const cdProjectName = path.relative(cwd, root)
     console.log(`\nDone. Now run:\n`)
@@ -298,7 +293,8 @@ async function init() {
             break
         default:
             console.log(`  ${pkgManager} install`)
-            console.log(`  npx ${packageName} generate <product-route>`)
+            console.log(`  ${pkgManager} run build`)
+            console.log(`  npx ${cdProjectName.includes(" ") ? `"${cdProjectName}"` : cdProjectName} generate <product-route>`)
             break
     }
     console.log()

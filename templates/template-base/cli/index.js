@@ -10,7 +10,7 @@ const pck = readFileSync(process.cwd() + "/package.json", "utf8");
 const { name, version } = JSON.parse(pck);
 
 async function printHelp() {
-    const { printHelp } = await import("./utils.js");
+    const { printHelp } = await import("./utils/print-utils.js");
     printHelp({
         commandName: name,
         usage: "[command] [...flags]",
@@ -61,25 +61,37 @@ async function runCommand(cmd, flags) {
 
     switch (cmd) {
         case "add": {
-            const { add } = await import("./add/index.js");
-            const packages = flags._.slice(3);
-            await add(packages, { flags });
+            const { add } = await import("./add.js");
+            if (flags._.length < 4) {
+                console.error(red("Error: add command should be: add <module-name> <module-url>"));
+                return;
+            }
+            const modulePackage = {
+                name: flags._[3],
+                url: flags._[4],
+            }
+
+            await add(modulePackage, { flags });
             return;
         }
         case "modify": {
-            const { modify } = await import("./modify/index.js");
-            const packages = flags._.slice(3);
-            if (packages.length === 0 || packages.length !== 2) {
-                console.error(red("Error: modify command requires two package names as arguments."));
+            const { modify } = await import("./modify.js");
+            if (flags._.length < 4) {
+                console.error(red("Error: modify command should be: add <module-name> <new-module-url>"));
                 return;
             }
-            await modify(packages, { flags });
+            const modulePackage = {
+                name: flags._[3],
+                newUrl: flags._[4],
+            }
+
+            await modify(modulePackage, { flags });
             return;
         }
         case "remove": {
-            const { remove } = await import("./remove/index.js");
-            const packages = flags._.slice(3);
-            await remove(packages, { flags });
+            const { remove } = await import("./remove.js");
+            const module = flags._[3]
+            await remove(module, { flags });
             return;
         }
         case "generate": {

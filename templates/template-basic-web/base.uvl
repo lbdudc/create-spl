@@ -1,6 +1,0 @@
-imports
-	main_component
-features
-	MainSPL
-		mandatory
-			main_component.WebApplication

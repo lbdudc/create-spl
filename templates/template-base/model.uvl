@@ -1,5 +1,6 @@
 imports
-    main_component
+    main_component from file://main_component
+
 features
     MainSPL
         mandatory

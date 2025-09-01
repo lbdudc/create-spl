@@ -1,0 +1,10 @@
+imports
+	main_component from git:https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git
+	user_management_component from git:https://gitlab.lbd.org.es/modularspl/spl-modules/map-viewer-component.git
+	map_viewer_component from git:https://gitlab.lbd.org.es/modularspl/spl-modules/user-management-component.git
+features
+	MainSPL
+		mandatory
+			main_component.WebApplication
+			user_management_component.UserManagement
+			map_viewer_component.MapViewer
