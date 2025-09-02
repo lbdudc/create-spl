@@ -8,10 +8,28 @@
     "cells": []
   },
   "features": [
-    "GraphicalUserInterface",
-    "GUI_Menu",
-    "GUI_M_Top",
+    "WebApplication",
     "Tools",
-    "T_MailSender"
+    "T_MailSender",
+    "T_Swagger",
+    "T_Payments",
+    "T_P_PayPal",
+    "T_FileUploader",
+    "T_EntitiesInformation",
+    "T_GIS",
+    "T_Quartz",
+    "T_CadastreImporter",
+    "T_CI_Rasters",
+    "Deploy",
+    "D_Containers",
+    "D_C_Postgres",
+    "D_C_Geoserver",
+    "D_C_Nginx",
+    "D_C_Elastic",
+    "D_C_Kibana",
+    "D_C_Kafka",
+    "D_EmailNotification",
+    "D_GitLabRunner",
+    "D_GLR_Unique"
   ]
 }

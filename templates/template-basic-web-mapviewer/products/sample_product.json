@@ -1,0 +1,578 @@
+{
+  "features": [
+    "WebApplication",
+    "Tools",
+    "T_MailSender",
+    "T_Swagger",
+    "T_Payments",
+    "T_P_PayPal",
+    "T_FileUploader",
+    "T_EntitiesInformation",
+    "T_GIS",
+    "T_Quartz",
+    "T_CadastreImporter",
+    "T_CI_Rasters",
+    "Deploy",
+    "D_Containers",
+    "D_C_Postgres",
+    "D_C_Geoserver",
+    "D_C_Nginx",
+    "D_C_Elastic",
+    "D_C_Kibana",
+    "D_C_Kafka",
+    "D_EmailNotification",
+    "D_GitLabRunner",
+    "D_GLR_Unique",
+    "GraphicalUserInterface",
+    "GUI_StaticPages",
+    "GUI_SP_Management",
+    "GUI_Menu",
+    "GUI_M_Position",
+    "GUI_M_Top",
+    "GUI_M_Custom",
+    "GUI_Forms",
+    "GUI_F_Editable",
+    "GUI_F_Creatable",
+    "GUI_F_Removable",
+    "GUI_F_R_ConfirmationAlert",
+    "GUI_Lists",
+    "GUI_L_Sortable",
+    "GUI_L_Filterable",
+    "GUI_L_F_RowFilter",
+    "GUI_L_LocateInMap",
+    "GUI_L_ViewListAsMap",
+    "GUI_L_FormLink",
+    "GUI_L_Export",
+    "GUI_SP_Management",
+    "MapViewer",
+    "MV_MapServer",
+    "MV_MS_GeoJSON",
+    "MV_MS_GJ_Paginated",
+    "MV_Tools",
+    "MV_T_ZoomWindow",
+    "MV_T_MeasureControl",
+    "MV_T_Export",
+    "MV_T_E_SetScale",
+    "MV_T_E_ShowLegend",
+    "MV_T_E_DRM",
+    "MV_T_E_Type",
+    "MV_T_E_F_PNG",
+    "MV_T_Filterable",
+    "MV_T_F_BasicSearch",
+    "MV_T_F_BS_ByUserGeolocation",
+    "MV_T_UserGeolocation",
+    "MV_T_InformationMode",
+    "MV_T_ViewMapAsList",
+    "MV_MapCustomization",
+    "MV_ContextInformation",
+    "MV_CI_Map",
+    "MV_LayerManagement",
+    "MV_LM_BaseLayerSelector",
+    "MV_MapManagement",
+    "MV_MM_MultipleMapViewer",
+    "MV_MM_MMV_MapSelectorInMapViewer",
+    "MV_DetailOnClick",
+    "MV_Clustering"
+  ],
+  "data": {
+    "basicData": {
+      "name": "ships",
+      "index": {
+        "component": "STATIC",
+        "view": "welcome"
+      },
+      "languages": ["en", "es", "gl"],
+      "packageInfo": {
+        "artifactId": "ships",
+        "groupId": "es.udc.lbd.ships"
+      },
+      "SRID": "4326"
+    },
+    "dataModel": {
+      "entities": [
+        {
+          "name": "Country",
+          "properties": [
+            {
+              "name": "id",
+              "class": "Long (autoinc)",
+              "pk": true,
+              "required": true,
+              "unique": true
+            },
+            {
+              "name": "geometry",
+              "class": "MultiPolygon"
+            },
+            {
+              "name": "name",
+              "class": "String",
+              "displayString": true
+            }
+          ],
+          "displayString": "$id"
+        },
+        {
+          "name": "Ocean",
+          "properties": [
+            {
+              "name": "id",
+              "class": "Long (autoinc)",
+              "pk": true,
+              "required": true,
+              "unique": true
+            },
+            {
+              "name": "geometry",
+              "class": "MultiPolygon"
+            },
+            {
+              "name": "name",
+              "class": "String",
+              "displayString": true
+            }
+          ],
+          "displayString": "$id"
+        },
+        {
+          "name": "ShipObservationEntity",
+          "properties": [
+            {
+              "name": "id",
+              "class": "Long (autoinc)",
+              "pk": true,
+              "required": true,
+              "unique": true
+            },
+            {
+              "name": "name",
+              "class": "String"
+            },
+            {
+              "name": "description",
+              "class": "String"
+            },
+            {
+              "name": "sensors",
+              "class": "ShipObservationMeasurement",
+              "owner": false,
+              "bidirectional": "sensor_id",
+              "multiple": true,
+              "required": false
+            }
+          ],
+          "displayString": "$id"
+        },
+        {
+          "name": "ShipObservationMeasurement",
+          "properties": [
+            {
+              "name": "id",
+              "class": "Long (autoinc)",
+              "pk": true,
+              "required": true,
+              "unique": true
+            },
+            {
+              "name": "geometry",
+              "class": "Point"
+            },
+            {
+              "name": "date",
+              "class": "DateTime",
+              "required": true
+            },
+            {
+              "name": "pressure",
+              "class": "Double"
+            },
+            {
+              "name": "salinity",
+              "class": "Double"
+            },
+            {
+              "name": "temperature",
+              "class": "Double"
+            },
+            {
+              "name": "shiptype",
+              "class": "String"
+            },
+            {
+              "name": "sensor_id",
+              "class": "ShipObservationEntity",
+              "owner": true,
+              "bidirectional": "sensors",
+              "multiple": false,
+              "required": false
+            }
+          ],
+          "displayString": "$id"
+        }
+      ],
+      "enums": []
+    },
+    "dataWarehouse": {
+      "sensors": [
+        {
+          "id": "ShipObservation",
+          "entity": "ShipObservationEntity",
+          "defaultMap": "shipobservation-map",
+          "defaultLayer": "shipobservation-layer",
+          "time": 60,
+          "isMoving": true,
+          "factTableEntity": "ShipObservationMeasurement",
+          "geom": "Point",
+          "measureData": [
+            {
+              "name": "pressure",
+              "type": "Double",
+              "units": "decibar"
+            },
+            {
+              "name": "salinity",
+              "type": "Double",
+              "units": "psu"
+            },
+            {
+              "name": "temperature",
+              "type": "Double",
+              "units": "degree_celsius"
+            }
+          ],
+          "dimensions": [
+            {
+              "id": "Country_Ocean",
+              "type": "SPATIAL",
+              "entities": ["Country", "Ocean"]
+            },
+            {
+              "id": "ShipType",
+              "type": "CATEGORICAL",
+              "field": "shiptype"
+            }
+          ]
+        }
+      ],
+      "sensorGroups": []
+    },
+    "forms": [],
+    "lists": [],
+    "menus": [],
+    "mapViewer": {
+      "maps": [
+        {
+          "name": "shipobservation-map",
+          "label": "ShipObservation Map",
+          "center": {
+            "lat": 0.0,
+            "lng": 0.0,
+            "zoom": 3
+          },
+          "sortable": false,
+          "layers": [
+            {
+              "name": "base",
+              "baseLayer": true,
+              "selected": true,
+              "order": 0
+            },
+            {
+              "name": "shipobservation-layer",
+              "baseLayer": false,
+              "style": "grayPoint",
+              "selected": true,
+              "order": 1
+            },
+            {
+              "name": "Country",
+              "baseLayer": false,
+              "style": "grayPolygon",
+              "selected": false,
+              "order": 2
+            },
+            {
+              "name": "Ocean",
+              "baseLayer": false,
+              "style": "grayPolygon",
+              "selected": false,
+              "order": 3
+            }
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "name": "base",
+          "type": "tilelayer",
+          "label": "base",
+          "url": "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        },
+        {
+          "name": "shipobservation-layer",
+          "type": "geojson",
+          "label": "ShipObservationMeasurement",
+          "entityName": "ShipObservationMeasurement",
+          "editable": false,
+          "defaultStyle": "grayPoint",
+          "availableStyles": [
+            "grayPolygon",
+            "pressure",
+            "pressure_POLYGON",
+            "salinity",
+            "salinity_POLYGON",
+            "temperature",
+            "temperature_POLYGON"
+          ]
+        },
+        {
+          "name": "Country",
+          "type": "geojson",
+          "label": "Country",
+          "entityName": "Country-geometry",
+          "editable": false,
+          "defaultStyle": "grayPolygon",
+          "availableStyles": [
+            "grayPolygon",
+            "pressure",
+            "pressure_POLYGON",
+            "salinity",
+            "salinity_POLYGON",
+            "temperature",
+            "temperature_POLYGON"
+          ]
+        },
+        {
+          "name": "Ocean",
+          "type": "geojson",
+          "label": "Ocean",
+          "entityName": "Ocean-geometry",
+          "editable": false,
+          "defaultStyle": "grayPolygon",
+          "availableStyles": [
+            "grayPolygon",
+            "pressure",
+            "pressure_POLYGON",
+            "salinity",
+            "salinity_POLYGON",
+            "temperature",
+            "temperature_POLYGON"
+          ]
+        }
+      ],
+      "styles": [
+        {
+          "name": "redPoint",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#FF0000",
+          "strokeColor": "#FF0000",
+          "fillOpacity": 1,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "greenPoint",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#008000",
+          "strokeColor": "#008000",
+          "fillOpacity": 1,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "grayPoint",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#808080",
+          "strokeColor": "#808080",
+          "fillOpacity": 1,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "orangePoint",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#FFA500",
+          "strokeColor": "#FFA500",
+          "fillOpacity": 1,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "redPolygon",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#FF0000",
+          "strokeColor": "#FF0000",
+          "fillOpacity": 0.5,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "greenPolygon",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#008000",
+          "strokeColor": "#008000",
+          "fillOpacity": 0.5,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "grayPolygon",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#808080",
+          "strokeColor": "#808080",
+          "fillOpacity": 0.5,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "orangePolygon",
+          "type": "GeoJSONLayerStyle",
+          "fillColor": "#FFA500",
+          "strokeColor": "#FFA500",
+          "fillOpacity": 0.5,
+          "strokeOpacity": 1,
+          "radius": 3
+        },
+        {
+          "name": "pressure",
+          "type": "StaticIntervalsStyle",
+          "property": "data.pressure",
+          "intervals": [
+            {
+              "minValue": "-Infinity",
+              "maxValue": 20,
+              "style": "greenPoint"
+            },
+            {
+              "minValue": 20,
+              "maxValue": 40,
+              "style": "orangePoint"
+            },
+            {
+              "minValue": 40,
+              "maxValue": "Infinity",
+              "style": "redPoint"
+            }
+          ],
+          "defaultStyle": "grayPoint"
+        },
+        {
+          "name": "pressure_POLYGON",
+          "type": "StaticIntervalsStyle",
+          "property": "data.pressure",
+          "intervals": [
+            {
+              "minValue": "-Infinity",
+              "maxValue": 20,
+              "style": "greenPolygon"
+            },
+            {
+              "minValue": 20,
+              "maxValue": 40,
+              "style": "orangePolygon"
+            },
+            {
+              "minValue": 40,
+              "maxValue": "Infinity",
+              "style": "redPolygon"
+            }
+          ],
+          "defaultStyle": "grayPolygon"
+        },
+        {
+          "name": "salinity",
+          "type": "StaticIntervalsStyle",
+          "property": "data.salinity",
+          "intervals": [
+            {
+              "minValue": "-Infinity",
+              "maxValue": 20,
+              "style": "greenPoint"
+            },
+            {
+              "minValue": 20,
+              "maxValue": 40,
+              "style": "orangePoint"
+            },
+            {
+              "minValue": 40,
+              "maxValue": "Infinity",
+              "style": "redPoint"
+            }
+          ],
+          "defaultStyle": "grayPoint"
+        },
+        {
+          "name": "salinity_POLYGON",
+          "type": "StaticIntervalsStyle",
+          "property": "data.salinity",
+          "intervals": [
+            {
+              "minValue": "-Infinity",
+              "maxValue": 20,
+              "style": "greenPolygon"
+            },
+            {
+              "minValue": 20,
+              "maxValue": 40,
+              "style": "orangePolygon"
+            },
+            {
+              "minValue": 40,
+              "maxValue": "Infinity",
+              "style": "redPolygon"
+            }
+          ],
+          "defaultStyle": "grayPolygon"
+        },
+        {
+          "name": "temperature",
+          "type": "StaticIntervalsStyle",
+          "property": "data.temperature",
+          "intervals": [
+            {
+              "minValue": "-Infinity",
+              "maxValue": 20,
+              "style": "greenPoint"
+            },
+            {
+              "minValue": 20,
+              "maxValue": 40,
+              "style": "orangePoint"
+            },
+            {
+              "minValue": 40,
+              "maxValue": "Infinity",
+              "style": "redPoint"
+            }
+          ],
+          "defaultStyle": "grayPoint"
+        },
+        {
+          "name": "temperature_POLYGON",
+          "type": "StaticIntervalsStyle",
+          "property": "data.temperature",
+          "intervals": [
+            {
+              "minValue": "-Infinity",
+              "maxValue": 20,
+              "style": "greenPolygon"
+            },
+            {
+              "minValue": 20,
+              "maxValue": 40,
+              "style": "orangePolygon"
+            },
+            {
+              "minValue": 40,
+              "maxValue": "Infinity",
+              "style": "redPolygon"
+            }
+          ],
+          "defaultStyle": "grayPolygon"
+        }
+      ]
+    },
+    "statics": []
+  }
+}

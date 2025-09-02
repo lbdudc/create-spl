@@ -25,4 +25,9 @@ export const TEMPLATES = [
         display: 'basic-web example with a map viewer (3 modules) ↗',
         color: yellow,
     },
+    {
+        name: 'basic-web-sensorviewer',
+        display: 'basic-web example with a sensor viewer (4 modules) ↗',
+        color: yellow,
+    },
 ]
