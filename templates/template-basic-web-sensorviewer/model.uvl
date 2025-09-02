@@ -1,0 +1,53 @@
+imports
+    moduleBase from git:https://gitlab.lbd.org.es/modularspl/spl-modules/main-component.git
+    moduleGUI from git:https://gitlab.lbd.udc.es/modularspl/spl-modules/graphical-user-interface-component.git
+    moduleMapViewer from git:https://gitlab.lbd.udc.es/modularspl/spl-modules/map-viewer-component.git
+    moduleSensorViewer from git:https://gitlab.lbd.udc.es/modularspl/spl-modules/sensor-viewer-component.git
+
+features
+    MainSPL
+        mandatory
+            moduleBase.WebApplication
+                mandatory
+                    Tools
+                        optional
+                            moduleBase.T_FileUploader 
+                            moduleBase.T_EntitiesInformation 
+                            moduleBase.T_Quartz 
+                        mandatory
+                            moduleBase.T_GIS
+                    Deploy
+                        or
+                            moduleBase.D_Containers 
+                                or
+                                    moduleBase.D_C_Postgres 
+                                    moduleBase.D_C_Geoserver 
+                                    moduleBase.D_C_Nginx 
+                                    moduleBase.D_C_Kafka      
+            moduleGUI.GraphicalUserInterface
+                optional
+                    GUI_Menu
+                        mandatory
+                            GUI_M_Position
+                                alternative
+                                    moduleGUI.GUI_M_Top
+                                    moduleGUI.GUI_M_Left
+                    moduleGUI.GUI_M_Custom
+            moduleMapViewer.MapViewer
+                mandatory
+                    MV_MapServer
+                        or
+                            MV_MS_GeoServer
+                            MV_MS_GeoJSON
+                                optional
+                                    MV_MS_GJ_Cached
+                                    MV_MS_GJ_Paginated
+                    MV_MapManagement 
+                        mandatory
+                            MV_MM_MultipleMapViewer
+                                optional
+                                    MV_MM_MMV_MapSelectorInMapViewer
+                                    MV_MM_MMV_MapSelectorInMenuElement 
+                optional
+                    MV_Clustering
+            moduleSensorViewer.SensorViewer

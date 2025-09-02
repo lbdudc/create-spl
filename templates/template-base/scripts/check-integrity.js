@@ -42,7 +42,9 @@ const checkSPLIntegrity = () => {
 
     const modulesChecked = [];
 
-    modulesJson.forEach((module) => {
+    modulesJson.forEach((module, idx) => {
+
+        let isMainComponent = idx == 0 ? true : false;
         let error = false;
         let errorMessages = [];
 
@@ -53,7 +55,7 @@ const checkSPLIntegrity = () => {
         }
 
         // Check if the module is valid in the node_modules folder
-        const { isValid, errors, fmValid } = checkSPLPackage(module.name, { flags: {} });
+        const { isValid, errors, fmValid } = checkSPLPackage(module.name, isMainComponent, { flags: {} });
         if (!isValid) {
             error = true;
             errors.forEach(e => errorMessages.push(e));
@@ -80,10 +82,9 @@ checkSPLIntegrity();
  * @param {string} name - The names of the packages to check
  * @returns {Object} - An object with the isValid property and the errors property
  */
-function checkSPLPackage(name, { flags }) {
+function checkSPLPackage(name, isMainComponent, { flags }) {
 
-    let files = ["config.json", "extra.js", "transformation.js", "model.uvl"];
-
+    let files = isMainComponent == true ? ["config.json", "extra.js", "transformation.js", "model.uvl"] : ["model.uvl"]
     let error = false;
     let errorsInModule = [];
 
