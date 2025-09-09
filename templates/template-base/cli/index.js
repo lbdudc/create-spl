@@ -5,6 +5,11 @@ import { readFileSync } from "fs";
 import * as colors from "kleur/colors";
 import { red } from "kolorist";
 import yargs from "yargs-parser";
+import path from "path";
+
+import {FeatureModel} from "spl-js-engine";
+import {FM_FILENAME } from '../src/consts/index.js';
+import { splModulesConfig } from "../src/splConfig.js";
 
 const pck = readFileSync(process.cwd() + "/package.json", "utf8");
 const { name, version } = JSON.parse(pck);
@@ -21,6 +26,7 @@ async function printHelp() {
                 ["modify", "Modify an integration."],
                 ["remove", "Remove an integration."],
                 ["generate", "Generate a new product."],
+                ["feature-model", "Show complete feature model."]
             ],
             "Global Flags": [
                 ["--version", "Show the version number and exit."],
@@ -41,7 +47,8 @@ function resolveCommand(flags) {
         "add",
         "modify",
         "remove",
-        "generate"
+        "generate",
+        "feature-model"
     ]);
     if (supportedCommands.has(cmd)) {
         return cmd;
@@ -107,11 +114,17 @@ async function runCommand(cmd, flags) {
             createProduct(productPath, outputFolder);
             return;
         }
+        case "feature-model":{
+            const modules = Object.fromEntries(splModulesConfig.map(({ name, path }) => [name, path]));
+            const fm = FeatureModel.fromUVL(path.join(process.cwd(), FM_FILENAME), modules);
+            let filename = flags._[3] || 'resolved_feature_model.uvl';
+            const resolvedUVL = fm.toUVL();
+            fs.writeFileSync(filename, resolvedUVL, 'utf8');
+            return;
+        }
     }
     throw new Error(`Error running ${cmd} -- no command found.`);
 }
-
-
 
 async function cli(args) {
     const flags = yargs(args, { boolean: ["global"], alias: { g: "global" } });
