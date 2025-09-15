@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import * as colors from "kleur/colors";
 import { red } from "kolorist";
 import yargs from "yargs-parser";
@@ -117,9 +117,9 @@ async function runCommand(cmd, flags) {
         case "feature-model":{
             const modules = Object.fromEntries(splModulesConfig.map(({ name, path }) => [name, path]));
             const fm = FeatureModel.fromUVL(path.join(process.cwd(), FM_FILENAME), modules);
-            let filename = flags._[3] || 'resolved_feature_model.uvl';
+            const output = flags._[3] || 'resolved_feature_model.uvl';
             const resolvedUVL = fm.toUVL();
-            fs.writeFileSync(filename, resolvedUVL, 'utf8');
+            writeFileSync(output, resolvedUVL, 'utf8');
             return;
         }
     }
