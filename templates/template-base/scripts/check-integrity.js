@@ -26,6 +26,7 @@ const checkSPLIntegrity = () => {
 
         const fmFile = readFileSync(path.join(process.cwd(), FM_FILENAME), "utf-8");
         fmUVL = fmFile;
+
     } catch (e) {
         console.error("Error reading files", e);
         return;
